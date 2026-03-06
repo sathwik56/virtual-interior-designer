@@ -685,89 +685,99 @@ function createFurniture(type) {
     return group; // Return the created furniture object
 }
 
+// Global raycaster and mouse for selection
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+// Setup event listeners once
+let draggingEnabled = false;
+
 function enableDragging() {
-    if (dragControls) dragControls.dispose();
+    if (draggingEnabled) return; // Already enabled
+    draggingEnabled = true;
     
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
+    renderer.domElement.addEventListener("click", handleClick);
+    renderer.domElement.addEventListener("mousedown", handleMouseDown);
+    renderer.domElement.addEventListener("mousemove", handleMouseMove);
+    renderer.domElement.addEventListener("mouseup", handleMouseUp);
+}
+
+function handleClick(e) {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(furnitureList, true);
     
-    renderer.domElement.addEventListener("click", (e) => {
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(furnitureList, true);
+    if (intersects.length > 0) {
+        let clickedObject = intersects[0].object;
+        while (clickedObject.parent && !furnitureList.includes(clickedObject)) {
+            clickedObject = clickedObject.parent;
+        }
         
-        if (intersects.length > 0) {
-            let clickedObject = intersects[0].object;
-            while (clickedObject.parent && !furnitureList.includes(clickedObject)) {
-                clickedObject = clickedObject.parent;
-            }
-            
-            if (e.ctrlKey || e.metaKey) {
-                if (selectedObjects.has(clickedObject)) {
-                    selectedObjects.delete(clickedObject);
-                } else {
-                    selectedObjects.add(clickedObject);
-                }
+        if (e.ctrlKey || e.metaKey) {
+            if (selectedObjects.has(clickedObject)) {
+                selectedObjects.delete(clickedObject);
             } else {
-                selectedObjects.clear();
                 selectedObjects.add(clickedObject);
             }
-            updateSelectionHighlight();
         } else {
             selectedObjects.clear();
-            updateSelectionHighlight();
+            selectedObjects.add(clickedObject);
         }
+        updateSelectionHighlight();
+    } else {
+        selectedObjects.clear();
+        updateSelectionHighlight();
+    }
+}
+
+function handleMouseDown(e) {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(furnitureList, true);
+    
+    if (intersects.length > 0) {
+        let clickedObject = intersects[0].object;
+        while (clickedObject.parent && !furnitureList.includes(clickedObject)) {
+            clickedObject = clickedObject.parent;
+        }
+        
+        if (selectedObjects.has(clickedObject)) {
+            orbitControls.enabled = false;
+            draggedObject = clickedObject;
+            dragOffset.copy(draggedObject.position);
+        }
+    }
+}
+
+function handleMouseMove(e) {
+    if (!draggedObject) return;
+    
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    
+    const planeNormal = new THREE.Vector3(0, 1, 0);
+    const plane = new THREE.Plane(planeNormal, 0);
+    const intersection = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, intersection);
+    
+    const delta = new THREE.Vector3().subVectors(intersection, dragOffset);
+    
+    selectedObjects.forEach(obj => {
+        obj.position.add(delta);
     });
     
-    renderer.domElement.addEventListener("mousedown", (e) => {
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(furnitureList, true);
-        
-        if (intersects.length > 0) {
-            let clickedObject = intersects[0].object;
-            while (clickedObject.parent && !furnitureList.includes(clickedObject)) {
-                clickedObject = clickedObject.parent;
-            }
-            
-            if (selectedObjects.has(clickedObject)) {
-                orbitControls.enabled = false;
-                draggedObject = clickedObject;
-                dragOffset.copy(draggedObject.position);
-            }
-        }
-    });
-    
-    renderer.domElement.addEventListener("mousemove", (e) => {
-        if (!draggedObject) return;
-        
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        
-        const planeNormal = new THREE.Vector3(0, 1, 0);
-        const plane = new THREE.Plane(planeNormal, 0);
-        const intersection = new THREE.Vector3();
-        raycaster.ray.intersectPlane(plane, intersection);
-        
-        const delta = new THREE.Vector3().subVectors(intersection, dragOffset);
-        
-        selectedObjects.forEach(obj => {
-            obj.position.add(delta);
-        });
-        
-        dragOffset.copy(intersection);
-    });
-    
-    renderer.domElement.addEventListener("mouseup", () => {
-        if (draggedObject) {
-            setTimeout(() => window.saveSession(), 200);
-        }
-        draggedObject = null;
-        orbitControls.enabled = true;
-    });
+    dragOffset.copy(intersection);
+}
+
+function handleMouseUp() {
+    if (draggedObject) {
+        setTimeout(() => window.saveSession(), 200);
+    }
+    draggedObject = null;
+    orbitControls.enabled = true;
 }
 
 function updateSelectionHighlight() {
@@ -891,7 +901,7 @@ function deleteSelected() {
         furnitureList = furnitureList.filter(o => o !== obj);
     });
     selectedObjects.clear();
-    enableDragging();
+    updateSelectionHighlight();
     setTimeout(() => window.saveSession(), 200);
 }
 
