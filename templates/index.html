@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Virtual Interior Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        body { 
+            margin: 0; 
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in;
+            background: #0f172a;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .page-transition {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+        
+        canvas { 
+            display: block; 
+        }
+        
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: none;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0;
+            position: fixed;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Login Modal */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .login-modal {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            width: 350px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-input {
+            width: 100%;
+            height: 45px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.5);
+            padding: 0 15px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        /* Scrollbar styling */
+        .glass-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .glass-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .glass-panel::-webkit-scrollbar-thumb {
+            background: rgba(132, 204, 22, 0.3);
+            border-radius: 10px;
+        }
+        
+        .glass-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(132, 204, 22, 0.5);
+        }
+        
+        /* Force readable labels */
+        .label-text {
+            color: #e2e8f0 !important;
+            font-weight: 600 !important;
+            font-size: 11px !important;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .label-icon {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        
+        /* Professional Buttons */
+        .modern-btn {
+            height: 36px;
+            border-radius: 6px;
+            box-shadow: none;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+        }
+        
+        .modern-btn:hover {
+            transform: none;
+            box-shadow: 0 2px 8px rgba(132, 204, 22, 0.2);
+            background: rgba(132, 204, 22, 0.1);
+            border-color: #84cc16;
+        }
+        
+        .modern-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .modern-btn i {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        
+        /* Primary action button */
+        .btn-primary {
+            background: #84cc16 !important;
+            color: white !important;
+            border-color: #84cc16 !important;
+        }
+        
+        .btn-primary:hover {
+            background: #65a30d !important;
+            border-color: #65a30d !important;
+        }
+        
+        .btn-primary i {
+            color: white !important;
+        }
+        
+        /* Danger button */
+        .btn-danger {
+            background: #f44336 !important;
+            color: white !important;
+            border-color: #f44336 !important;
+        }
+        
+        .btn-danger:hover {
+            background: #da190b !important;
+            border-color: #da190b !important;
+        }
+        
+        .btn-danger i {
+            color: white !important;
+        }
+        
+        /* Section Dividers */
+        .section-divider {
+            border: none;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 16px 0;
+        }
+        
+        /* 3D Viewport Border */
+        canvas {
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Button row layout */
+        .button-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        /* Dropdown styling */
+        select {
+            height: 36px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            padding: 0 10px;
+            transition: all 0.2s ease;
+            color: #e2e8f0;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #84cc16;
+            box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.1);
+        }
+        
+        select option {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+        
+        /* Color picker styling */
+        input[type="color"] {
+            height: 36px;
+            width: 100%;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        /* Number input styling */
+        input[type="number"] {
+            height: 36px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            padding: 0 10px;
+            transition: all 0.2s ease;
+            width: 100%;
+            color: #e2e8f0;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #84cc16;
+            box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.1);
+        }
+        
+        /* Room size row */
+        .room-size-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .room-size-item {
+            flex: 1;
+        }
+        
+        .room-size-label {
+            color: #94a3b8 !important;
+            font-weight: 500 !important;
+            font-size: 10px !important;
+            margin-bottom: 4px;
+        }
+        
+        /* Collapsible sections */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 2px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .section-header:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 2px 4px;
+        }
+        
+        .collapse-arrow {
+            font-size: 12px;
+            font-weight: bold;
+            color: #94a3b8;
+            transition: transform 0.3s ease;
+        }
+        
+        .collapse-arrow.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .section-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        
+        .section-content.expanded {
+            max-height: 1500px;
+            opacity: 1;
+        }
+        
+        /* Selection Panel Categories */
+        .category-section {
+            margin-bottom: 8px;
+        }
+        
+        .category-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            padding-bottom: 2px;
+            border-bottom: 1px solid rgba(200, 200, 200, 0.3);
+        }
+        
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+        }
+        
+        .item-card {
+            background: #f8f9fa;
+            border: 1px solid rgba(200, 200, 200, 0.4);
+            border-radius: 4px;
+            padding: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .item-card:hover {
+            background: #e9ecef;
+            border-color: #4ade80;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(74, 222, 128, 0.3);
+        }
+        
+        .item-icon {
+            font-size: 16px;
+            margin-bottom: 1px;
+        }
+        
+        .item-name {
+            font-family: 'Inter', sans-serif;
+            font-size: 7px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .help-circle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+            z-index: 30;
+            color: #000;
+            font-weight: bold;
+        }
+        
+        .help-circle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+        
+        /* Help Panel */
+        .help-panel {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 320px;
+            padding: 20px;
+            z-index: 25;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .help-title {
+            color: #000000 !important;
+            font-weight: 900 !important;
+            font-size: 16px !important;
+        }
+        
+        .help-content {
+            color: #000000 !important;
+            font-weight: 700 !important;
+            font-size: 12px !important;
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+            backdrop-filter: none;
+        }
+        
+        .loading-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(132, 204, 22, 0.2);
+            border-top: 4px solid #84cc16;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+        
+        /* Start Options Modal */
+        .start-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+        
+        .start-modal-overlay.show {
+            opacity: 1;
+        }
+        
+        .start-modal-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .start-modal-title {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .start-options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 900px;
+        }
+        
+        .start-option-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 40px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .start-option-card:hover {
+            transform: translateY(-5px);
+            border-color: #84cc16;
+            background: rgba(132, 204, 22, 0.1);
+            box-shadow: 0 8px 24px rgba(132, 204, 22, 0.3);
+        }
+        
+        .start-option-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .start-option-title {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .close-modal-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            font-size: 24px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .close-modal-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #84cc16;
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loadingScreen" class="loading-screen">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading your workspace...</div>
+</div>
+
+<!-- Start Options Modal -->
+<div id="startModal" class="start-modal-overlay">
+    <button class="close-modal-btn" onclick="closeStartModal()">×</button>
+    <h2 class="start-modal-title">Choose how you'd like to start</h2>
+    <div class="start-options-grid">
+        <div class="start-option-card" onclick="continueSession()">
+            <div class="start-option-icon">🔄</div>
+            <div class="start-option-title">Continue Session</div>
+            <p id="sessionInfo" style="font-size: 11px; color: #a0a0a0; margin-top: 8px;">No previous session</p>
+        </div>
+        <div class="start-option-card" onclick="startFromScratch()">
+            <div class="start-option-icon">✏️</div>
+            <div class="start-option-title">Start from Scratch</div>
+        </div>
+        <div class="start-option-card" onclick="loadMyProjects()">
+            <div class="start-option-icon">📁</div>
+            <div class="start-option-title">My Projects</div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- Designer Panel -->
+<div class="glass-panel left-0 z-10" style="top: 0; height: 100vh; overflow-y: auto; padding: 20px; width: 320px;">
+    
+    <!-- User Status (if logged in) -->
+    <div id="userStatus" style="display: none; margin-bottom: 16px; padding: 12px; background: rgba(132, 204, 22, 0.1); border-radius: 6px; text-align: center; border: 1px solid rgba(132, 204, 22, 0.3);">
+        <div style="font-size: 11px; font-weight: 600; color: #84cc16;">Logged in as: <span id="usernameDisplay"></span></div>
+        <button onclick="handleLogout()" class="modern-btn btn-danger w-full" style="margin-top: 8px; height: 32px; font-size: 10px;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+    
+    <!-- Room Size Section -->
+    <div style="margin-bottom: 16px;">
+        <div class="section-header" onclick="toggleSection('roomSize')">
+            <h2 class="label-text" style="margin-bottom: 0;">
+                <i class="fas fa-ruler-combined label-icon"></i>
+                Room Size
+            </h2>
+            <span class="collapse-arrow" id="roomSizeArrow">▼</span>
+        </div>
+        <div class="section-content expanded" id="roomSizeContent">
+            <div class="room-size-row" style="margin-top: 8px;">
+                <div class="room-size-item">
+                    <div class="room-size-label">Width (m)</div>
+                    <input type="number" id="roomWidth" value="20" min="5" max="50" step="1" onchange="updateRoomSize()">
+                </div>
+                <div class="room-size-item">
+                    <div class="room-size-label">Length (m)</div>
+                    <input type="number" id="roomLength" value="20" min="5" max="50" step="1" onchange="updateRoomSize()">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <hr class="section-divider">
+    
+    <!-- Furniture Section -->
+    <div style="margin-bottom: 16px;">
+        <div class="section-header" onclick="toggleSection('furniture')">
+            <h2 class="label-text" style="margin-bottom: 0;">
+                <i class="fas fa-couch label-icon"></i>
+                Furniture
+            </h2>
+            <span class="collapse-arrow" id="furnitureArrow">▼</span>
+        </div>
+        <div class="section-content expanded" id="furnitureContent">
+            <select id="furnitureSelect" class="w-full" style="margin-top: 8px; margin-bottom: 10px;">
+                <option value="">Choose Furniture</option>
+                <option value="bed">🛏️ Bed</option>
+                <option value="sofa">🛋️ Sofa</option>
+                <option value="table">🪑 Dining Table</option>
+                <option value="chair">💺 Chair</option>
+                <option value="cabinet">🗄️ Cabinet</option>
+                <option value="desk">🖥️ Desk</option>
+                <option value="bookshelf">📚 Bookshelf</option>
+                <option value="nightstand">🕯️ Nightstand</option>
+                <option value="wardrobe">👔 Wardrobe</option>
+                <option value="coffeetable">☕ Coffee Table</option>
+                <option value="tvstand">📺 TV Stand</option>
+                <option value="dresser">💄 Dresser</option>
+                <option value="armchair">🪑 Armchair</option>
+                <option value="diningchair">🍽️ Dining Chair</option>
+                <option value="lamp">💡 Lamp</option>
+                <option value="interiorwall">🧱 Interior Wall</option>
+                <option value="doorwall">🚪 Wall with Door</option>
+                <option value="windowwall">🪟 Wall with Window</option>
+                <option value="glasswall">🔲 Glass Wall</option>
+                <option value="straightstairs">🪜 Straight Staircase</option>
+                <option value="lshapedstairs">🔄 L-Shaped Stairs</option>
+                <option value="spiralstairs">🌀 Spiral Staircase</option>
+            </select>
+            
+            <button onclick="addSelectedFurniture()" class="modern-btn btn-primary text-white w-full" style="margin-bottom: 8px;">
+                <i class="fas fa-plus"></i> Add to Scene
+            </button>
+            
+            <button onclick="rotateSelected()" class="modern-btn w-full" style="margin-bottom: 0;">
+                <i class="fas fa-rotate-right"></i> Rotate Selected
+            </button>
+        </div>
+    </div>
+    
+    <hr class="section-divider">
+    
+    <!-- Materials Section -->
+    <div style="margin-bottom: 16px;">
+        <div class="section-header" onclick="toggleSection('materials')">
+            <h2 class="label-text" style="margin-bottom: 0;">
+                <i class="fas fa-palette label-icon"></i>
+                Materials
+            </h2>
+            <span class="collapse-arrow" id="materialsArrow">▼</span>
+        </div>
+        <div class="section-content expanded" id="materialsContent">
+            <div style="margin-bottom: 10px; margin-top: 8px;">
+                <div class="room-size-label" style="margin-bottom: 4px;">Wall Color</div>
+                <input type="color" id="wallColor" value="#374151" onchange="changeWallColor(this.value)">
+            </div>
+            
+            <div style="margin-bottom: 0;">
+                <div class="room-size-label" style="margin-bottom: 4px;">Floor Color</div>
+                <input type="color" id="floorColor" value="#2d3748" onchange="changeFloorColor(this.value)">
+            </div>
+        </div>
+    </div>
+    
+    <hr class="section-divider">
+    
+    <!-- Tools Section -->
+    <div style="margin-bottom: 16px;">
+        <div class="section-header" onclick="toggleSection('tools')">
+            <h2 class="label-text" style="margin-bottom: 0;">
+                <i class="fas fa-wrench label-icon"></i>
+                Tools
+            </h2>
+            <span class="collapse-arrow" id="toolsArrow">▼</span>
+        </div>
+        <div class="section-content expanded" id="toolsContent">
+            <div class="button-row" style="margin-top: 8px;">
+                <button onclick="toggleWalls()" class="modern-btn flex-1">
+                    <i class="fas fa-building"></i> Walls
+                </button>
+                <button onclick="toggleGrid()" class="modern-btn flex-1">
+                    <i class="fas fa-border-all"></i> Grid
+                </button>
+            </div>
+            
+            <div class="button-row">
+                <button onclick="saveDesign()" class="modern-btn btn-primary flex-1">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <button onclick="loadDesign()" class="modern-btn flex-1">
+                    <i class="fas fa-folder-open"></i> Load
+                </button>
+            </div>
+            
+            <button onclick="deleteSelected()" class="modern-btn btn-danger w-full" style="margin-bottom: 8px;">
+                <i class="fas fa-trash"></i> Delete Selected
+            </button>
+            
+            <div class="button-row">
+                <button onclick="undoAction()" class="modern-btn flex-1">
+                    <i class="fas fa-undo"></i> Undo
+                </button>
+                <button onclick="redoAction()" class="modern-btn flex-1">
+                    <i class="fas fa-redo"></i> Redo
+                </button>
+            </div>
+            
+            <div class="button-row">
+                <button onclick="resetCamera()" class="modern-btn flex-1">
+                    <i class="fas fa-video"></i> Reset
+                </button>
+                <button onclick="topView()" class="modern-btn flex-1">
+                    <i class="fas fa-eye"></i> Top
+                </button>
+            </div>
+            
+            <button onclick="captureScreenshot()" class="modern-btn w-full" style="margin-bottom: 0;">
+                <i class="fas fa-camera"></i> Export Image
+            </button>
+        </div>
+    </div>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.152.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.152.0/examples/jsm/"
+  }
+}
+</script>
+<script>
+let currentUser = null;
+
+// Make currentUser accessible globally for main.js
+window.currentUser = null;
+
+// Check if user is already logged in on page load
+window.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/check_session');
+        const data = await response.json();
+        
+        if (data.logged_in) {
+            currentUser = data.username;
+            window.currentUser = data.username;
+            
+            // Show user status
+            document.getElementById('userStatus').style.display = 'block';
+            document.getElementById('usernameDisplay').textContent = data.username;
+        } else {
+            // User not logged in - this is fine, they can still design
+            currentUser = null;
+            window.currentUser = null;
+        }
+    } catch (error) {
+        console.error('Session check failed:', error);
+        currentUser = null;
+        window.currentUser = null;
+    }
+    
+    // Hide loading screen after a short delay to ensure 3D scene is ready
+    setTimeout(() => {
+        // Check if there's a previous session
+        const sessionData = localStorage.getItem('currentSession');
+        const startModal = document.getElementById('startModal');
+        
+        if (sessionData) {
+            try {
+                const session = JSON.parse(sessionData);
+                const sessionDate = new Date(session.timestamp);
+                const itemCount = session.furniture ? session.furniture.length : 0;
+                
+                // Update session info
+                const sessionInfo = document.getElementById('sessionInfo');
+                if (sessionInfo) {
+                    sessionInfo.textContent = `${itemCount} items • ${sessionDate.toLocaleDateString()} ${sessionDate.toLocaleTimeString()}`;
+                    sessionInfo.style.color = '#4CAF50';
+                }
+            } catch (error) {
+                console.error('Error parsing session:', error);
+            }
+        }
+        
+        // Show start modal FIRST (before hiding loading screen)
+        if (startModal) {
+            startModal.classList.add('show');
+        }
+        
+        // Then fade out loading screen (slight delay for smooth transition)
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.classList.add('fade-out');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }, 100);
+    }, 1500);
+});
+
+function closeStartModal() {
+    const startModal = document.getElementById('startModal');
+    if (startModal) {
+        startModal.classList.add('hidden');
+    }
+}
+
+function continueSession() {
+    // Load the previous session
+    closeStartModal();
+    const loaded = window.loadSession();
+    if (loaded) {
+        alert('Previous session restored!');
+    } else {
+        alert('No previous session found. Starting fresh.');
+    }
+}
+
+function startFromScratch() {
+    // Clear session and start fresh
+    closeStartModal();
+    window.clearSession();
+    
+    // Clear the scene
+    if (window.furnitureList) {
+        window.furnitureList.forEach(obj => {
+            if (window.scene) {
+                window.scene.remove(obj);
+            }
+        });
+        window.furnitureList = [];
+    }
+    
+    console.log('Starting fresh session');
+}
+
+function loadMyProjects() {
+    // Close modal and trigger manage designs
+    closeStartModal();
+    manageDesigns();
+}
+
+// Handle browser back button - redirect to home
+window.addEventListener('popstate', function(event) {
+    window.location.href = '/';
+});
+
+async function handleLogout() {
+    try {
+        await fetch('/logout', { method: 'POST' });
+        
+        currentUser = null;
+        window.currentUser = null;
+        
+        // Hide user status
+        document.getElementById('userStatus').style.display = 'none';
+        
+        alert('Logged out successfully!');
+    } catch (error) {
+        alert('Logout error: ' + error.message);
+    }
+}
+
+function toggleSection(sectionName) {
+    const content = document.getElementById(sectionName + 'Content');
+    const arrow = document.getElementById(sectionName + 'Arrow');
+    
+    if (content.classList.contains('collapsed')) {
+        // Expand
+        content.classList.remove('collapsed');
+        content.classList.add('expanded');
+        arrow.textContent = '▼';
+        arrow.classList.remove('collapsed');
+    } else {
+        // Collapse
+        content.classList.remove('expanded');
+        content.classList.add('collapsed');
+        arrow.textContent = '▶';
+        arrow.classList.add('collapsed');
+    }
+}
+</script>
+<script type="module" src="{{ url_for('static', filename='js/main.js') }}?v=6.0"></script>
+
+</body>
+</html>

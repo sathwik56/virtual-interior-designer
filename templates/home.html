@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Interior Designer - Design Your Home in 3D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .hero-overlay {
+            background: rgba(0, 0, 0, 0.6);
+        }
+        
+        .absolute.inset-0.w-full.h-full.bg-cover {
+            z-index: 0;
+        }
+        
+
+        
+        .start-button {
+            background: #84cc16;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(132, 204, 22, 0.3);
+        }
+        
+        .start-button:hover {
+            background: #65a30d;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 50px rgba(132, 204, 22, 0.5);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .delay-1 {
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+        
+        .delay-2 {
+            animation-delay: 0.4s;
+            opacity: 0;
+        }
+        
+        .delay-3 {
+            animation-delay: 0.6s;
+            opacity: 0;
+        }
+        
+        /* Page Transition */
+        body {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .page-transition {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+        
+        /* Login Modal */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .login-modal {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            width: 350px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-input {
+            width: 100%;
+            height: 45px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.5);
+            padding: 0 15px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #000;
+        }
+        
+        .login-input::placeholder {
+            color: #666;
+            opacity: 1;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #84cc16;
+            box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.2);
+        }
+        
+        .modern-btn {
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .modern-btn:hover {
+            transform: translateY(-2px);
+            background: #65a30d !important;
+            box-shadow: 0 4px 12px rgba(132, 204, 22, 0.3);
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+    <!-- Login Modal -->
+    <div id="loginOverlay" class="login-overlay hidden">
+        <div class="login-modal">
+            <h2 style="text-align: center; font-size: 24px; font-weight: 900; color: #000; margin-bottom: 25px;">SIGN IN</h2>
+            <input type="text" id="username" class="login-input" placeholder="Username">
+            <input type="password" id="password" class="login-input" placeholder="Password">
+            <button onclick="handleLogin()" class="modern-btn text-white w-full" style="height: 45px; font-size: 14px; margin-top: 10px; background: #84cc16; border: none;">
+                Sign In
+            </button>
+            <p style="text-align: center; margin-top: 15px; color: #000; font-size: 13px; font-weight: 600;">
+                Don't have an account? 
+                <span style="color: #84cc16; cursor: pointer; text-decoration: underline;" onclick="showRegister()">Create Account</span>
+            </p>
+            <p style="text-align: center; margin-top: 10px; color: #000; font-size: 12px; cursor: pointer;" onclick="hideLogin()">Cancel</p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerOverlay" class="login-overlay hidden">
+        <div class="login-modal">
+            <h2 style="text-align: center; font-size: 24px; font-weight: 900; color: #000; margin-bottom: 25px;">CREATE ACCOUNT</h2>
+            <input type="text" id="regUsername" class="login-input" placeholder="Choose Username">
+            <input type="password" id="regPassword" class="login-input" placeholder="Choose Password">
+            <input type="password" id="regConfirmPassword" class="login-input" placeholder="Confirm Password">
+            <button onclick="handleRegister()" class="modern-btn text-white w-full" style="height: 45px; font-size: 14px; margin-top: 10px; background: #84cc16; border: none;">
+                Create Account
+            </button>
+            <p style="text-align: center; margin-top: 15px; color: #000; font-size: 13px; font-weight: 600;">
+                Already have an account? 
+                <span style="color: #84cc16; cursor: pointer; text-decoration: underline;" onclick="showLogin()">Sign In</span>
+            </p>
+            <p style="text-align: center; margin-top: 10px; color: #000; font-size: 12px; cursor: pointer;" onclick="hideRegister()">Cancel</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="absolute top-0 left-0 right-0 z-20" style="height: 50px; padding: 0 20px;">
+        <div class="flex justify-between items-center h-full">
+            <!-- Logo/Brand -->
+            <div class="text-white font-semibold text-base">Virtual Designer</div>
+            
+            <!-- Sign In Button -->
+            <button onclick="showLogin()" class="px-4 py-2 rounded-full text-sm font-semibold transition-all hover:opacity-90" style="border: 1.5px solid rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.15); color: #ffffff; backdrop-filter: blur(10px); cursor: pointer;">
+                Sign In
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="relative h-screen w-full overflow-hidden">
+        <!-- Background Image (Primary) -->
+        <div class="absolute inset-0 w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000');"></div>
+        
+        <!-- Dark Overlay -->
+        <div class="absolute inset-0 hero-overlay"></div>
+        
+        <!-- Content -->
+        <div class="relative z-10 flex flex-col items-center justify-center h-full px-4" style="padding-bottom: 120px;">
+            <!-- Main Heading -->
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-white text-center mb-8 animate-fade-in-up tracking-tight">
+                DESIGN YOUR HOME<br>IN 3D
+            </h1>
+            
+            <!-- Sub Text -->
+            <p class="text-lg md:text-xl lg:text-2xl text-gray-200 text-center mb-12 max-w-2xl animate-fade-in-up delay-1 font-light" style="line-height: 1.8;">
+                Plan, design and decorate your home in 3D without any special skills.
+            </p>
+            
+            <!-- Start Button -->
+            <div class="animate-fade-in-up delay-2">
+                <a href="/editor" class="start-button text-white text-lg font-bold px-12 py-4 rounded-full uppercase tracking-wider inline-block">
+                    START
+                </a>
+            </div>
+        </div>
+        
+        <!-- Bottom Features -->
+        <div class="absolute bottom-4 left-0 right-0 z-10">
+            <div class="max-w-6xl mx-auto px-4">
+                <div class="grid grid-cols-3 gap-8 animate-fade-in-up delay-3">
+                    <div class="text-center">
+                        <div class="text-xl mb-1">✏️</div>
+                        <h3 class="text-white font-semibold text-xs mb-0.5">Easy to Use</h3>
+                        <p class="text-gray-300 text-xs font-light">Drag and drop furniture</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xl mb-1">📁</div>
+                        <h3 class="text-white font-semibold text-xs mb-0.5">Save Designs</h3>
+                        <p class="text-gray-300 text-xs font-light">Multiple room designs</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xl mb-1">🖌️</div>
+                        <h3 class="text-white font-semibold text-xs mb-0.5">Customize</h3>
+                        <p class="text-gray-300 text-xs font-light">Change colors and sizes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('registerOverlay').classList.add('hidden');
+        }
+
+        function hideLogin() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function showRegister() {
+            document.getElementById('registerOverlay').classList.remove('hidden');
+            document.getElementById('loginOverlay').classList.add('hidden');
+        }
+
+        function hideRegister() {
+            document.getElementById('registerOverlay').classList.add('hidden');
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirmPassword').value = '';
+        }
+
+        async function handleRegister() {
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            
+            if (!username || !password || !confirmPassword) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            if (username.length < 3) {
+                alert('Username must be at least 3 characters long');
+                return;
+            }
+            
+            const usernameRegex = /^[a-zA-Z0-9_]+$/;
+            if (!usernameRegex.test(username)) {
+                alert('Username can only contain letters, numbers, and underscores');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long');
+                return;
+            }
+            
+            const hasLetter = /[a-zA-Z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            
+            if (!hasLetter || !hasNumber) {
+                alert('Password must contain at least one letter and one number');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Account created successfully! You can now login.');
+                    hideRegister();
+                    showLogin();
+                } else {
+                    alert(data.message || 'Registration failed.');
+                }
+            } catch (error) {
+                alert('Registration error: ' + error.message);
+            }
+        }
+
+        async function handleLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                alert('Please enter both username and password');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Redirect to editor after successful login with smooth transition
+                    document.body.classList.add('page-transition');
+                    setTimeout(() => {
+                        window.location.href = '/editor';
+                    }, 300);
+                } else {
+                    alert(data.message || 'Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                alert('Login error: ' + error.message);
+            }
+        }
+        
+        // Allow Enter key to submit
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('password');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        handleLogin();
+                    }
+                });
+            }
+            
+            const regConfirmPassword = document.getElementById('regConfirmPassword');
+            if (regConfirmPassword) {
+                regConfirmPassword.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        handleRegister();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
