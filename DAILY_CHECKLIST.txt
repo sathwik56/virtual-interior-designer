@@ -1,0 +1,62 @@
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║          Daily Checklist - Protect Your Work              ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+
+BEFORE YOU START WORKING:
+═══════════════════════════════════════════════════════════
+
+□ Computer is plugged in (don't rely on battery)
+□ Saved previous work (check last backup date)
+
+
+WHILE WORKING:
+═══════════════════════════════════════════════════════════
+
+□ Save files frequently (Ctrl+S)
+□ Test changes before moving on
+□ Keep notes of what you changed
+
+
+BEFORE CLOSING VS CODE:
+═══════════════════════════════════════════════════════════
+
+□ Save all files (Ctrl+S)
+□ Test that app still works (python app.py)
+□ Create backup (double-click BACKUP.bat)
+□ Push to GitHub (if setup):
+  - git add .
+  - git commit -m "What you changed"
+  - git push
+
+
+WEEKLY:
+═══════════════════════════════════════════════════════════
+
+□ Check backup folder on Desktop
+□ Verify GitHub has latest code
+□ Clean up old backup folders (keep last 3-4)
+
+
+IF SOMETHING BREAKS:
+═══════════════════════════════════════════════════════════
+
+□ Don't panic!
+□ Check backup folder on Desktop
+□ Or restore from GitHub: git checkout HEAD -- filename
+□ Or ask for help
+
+
+REMEMBER:
+═══════════════════════════════════════════════════════════
+
+✓ Backup = Peace of mind
+✓ 5 minutes of backup saves hours of work
+✓ Better safe than sorry!
+
+
+═══════════════════════════════════════════════════════════
+
+Print this and keep it near your computer! 📋
