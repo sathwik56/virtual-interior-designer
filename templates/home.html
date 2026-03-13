@@ -12,7 +12,7 @@
         }
         
         .hero-overlay {
-            background: rgba(0, 0, 0, 0.6);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.6) 100%);
         }
         
         .absolute.inset-0.w-full.h-full.bg-cover {
@@ -22,15 +22,34 @@
 
         
         .start-button {
-            background: #84cc16;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 40px rgba(132, 204, 22, 0.3);
+            background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 40px rgba(132, 204, 22, 0.5), 0 0 60px rgba(132, 204, 22, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .start-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
         
         .start-button:hover {
-            background: #65a30d;
-            transform: translateY(-3px);
-            box-shadow: 0 15px 50px rgba(132, 204, 22, 0.5);
+            background: linear-gradient(135deg, #65a30d 0%, #4d7c0f 100%);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 20px 60px rgba(132, 204, 22, 0.7), 0 0 80px rgba(132, 204, 22, 0.5);
         }
         
         @keyframes fadeInUp {
@@ -106,13 +125,13 @@
         }
         
         .login-modal {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(20px);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
+            backdrop-filter: blur(25px);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 20px;
             padding: 40px;
             width: 350px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
         
         .login-input {
@@ -134,8 +153,8 @@
         
         .login-input:focus {
             outline: none;
-            border-color: #84cc16;
-            box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.2);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
         
         .modern-btn {
@@ -196,7 +215,7 @@
     <nav class="absolute top-0 left-0 right-0 z-20" style="height: 50px; padding: 0 20px;">
         <div class="flex justify-between items-center h-full">
             <!-- Logo/Brand -->
-            <div class="text-white font-semibold text-base">Virtual Designer</div>
+            <div class="text-white font-semibold text-base" style="letter-spacing: 0.5px;">Virtual Designer</div>
             
             <!-- Sign In Button -->
             <button onclick="showLogin()" class="px-4 py-2 rounded-full text-sm font-semibold transition-all hover:opacity-90" style="border: 1.5px solid rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.15); color: #ffffff; backdrop-filter: blur(10px); cursor: pointer;">
@@ -221,7 +240,7 @@
             </h1>
             
             <!-- Sub Text -->
-            <p class="text-lg md:text-xl lg:text-2xl text-gray-200 text-center mb-12 max-w-2xl animate-fade-in-up delay-1 font-light" style="line-height: 1.8;">
+            <p class="text-lg md:text-xl lg:text-2xl text-center mb-12 max-w-2xl animate-fade-in-up delay-1 font-light" style="line-height: 1.8; color: #f1f5f9; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);">
                 Plan, design and decorate your home in 3D without any special skills.
             </p>
             
@@ -237,20 +256,20 @@
         <div class="absolute bottom-4 left-0 right-0 z-10">
             <div class="max-w-6xl mx-auto px-4">
                 <div class="grid grid-cols-3 gap-8 animate-fade-in-up delay-3">
-                    <div class="text-center">
+                    <div class="text-center" style="transition: all 0.3s ease;">
                         <div class="text-xl mb-1">✏️</div>
-                        <h3 class="text-white font-semibold text-xs mb-0.5">Easy to Use</h3>
-                        <p class="text-gray-300 text-xs font-light">Drag and drop furniture</p>
+                        <h3 class="text-white font-semibold text-xs mb-0.5" style="text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);">Easy to Use</h3>
+                        <p class="text-xs font-light" style="color: #e2e8f0; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);">Drag and drop furniture</p>
                     </div>
-                    <div class="text-center">
+                    <div class="text-center" style="transition: all 0.3s ease;">
                         <div class="text-xl mb-1">📁</div>
-                        <h3 class="text-white font-semibold text-xs mb-0.5">Save Designs</h3>
-                        <p class="text-gray-300 text-xs font-light">Multiple room designs</p>
+                        <h3 class="text-white font-semibold text-xs mb-0.5" style="text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);">Save Designs</h3>
+                        <p class="text-xs font-light" style="color: #e2e8f0; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);">Multiple room designs</p>
                     </div>
-                    <div class="text-center">
+                    <div class="text-center" style="transition: all 0.3s ease;">
                         <div class="text-xl mb-1">🖌️</div>
-                        <h3 class="text-white font-semibold text-xs mb-0.5">Customize</h3>
-                        <p class="text-gray-300 text-xs font-light">Change colors and sizes</p>
+                        <h3 class="text-white font-semibold text-xs mb-0.5" style="text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);">Customize</h3>
+                        <p class="text-xs font-light" style="color: #e2e8f0; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);">Change colors and sizes</p>
                     </div>
                 </div>
             </div>

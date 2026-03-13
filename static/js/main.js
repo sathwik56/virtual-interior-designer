@@ -2,8 +2,16 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 let scene, camera, renderer, orbitControls;
-let furnitureList = [], selectedObjects = new Set(), walls = null, floor = null, grid = null;
+let furnitureList = [], selectedObjects = new Set(), walls = null, floor = null, grid = null, roof = null;
 let draggedObject = null, dragOffset = new THREE.Vector3();
+
+// First-person mode variables
+let isWalkMode = false;
+let moveSpeed = 0.1;
+let lookSpeed = 0.002;
+let keys = { w: false, a: false, s: false, d: false };
+let yaw = 0, pitch = 0;
+let velocity = new THREE.Vector3();
 
 init();
 animate();
@@ -13,8 +21,11 @@ window.addSelectedFurniture = addSelectedFurniture;
 window.rotateSelected = rotateSelected;
 window.changeWallColor = changeWallColor;
 window.changeFloorColor = changeFloorColor;
+window.changeRoofColor = changeRoofColor;
 window.toggleWalls = toggleWalls;
 window.toggleGrid = toggleGrid;
+window.toggleRoof = toggleRoof;
+window.toggleWalkMode = toggleWalkMode;
 window.saveDesign = saveDesign;
 window.loadDesign = loadDesign;
 window.deleteSelected = deleteSelected;
@@ -29,7 +40,7 @@ window.createFurniture = createFurniture;
 
 function init() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1f2e);
+    scene.background = new THREE.Color(0xd4dde5); // Darker gray for better contrast
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(12, 10, 12);
@@ -41,11 +52,11 @@ function init() {
     orbitControls = new OrbitControls(camera, renderer.domElement);
     orbitControls.enableDamping = true;
 
-    // Professional lighting with realistic depth and shadows
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // Professional bright lighting like SketchUp
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
     directionalLight.position.set(5, 10, 7);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
@@ -56,22 +67,27 @@ function init() {
     directionalLight.shadow.camera.bottom = -15;
     directionalLight.shadow.bias = -0.0001;
     scene.add(directionalLight);
+    
+    // Add fill light for softer shadows
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    fillLight.position.set(-5, 5, -5);
+    scene.add(fillLight);
 
     floor = new THREE.Mesh(
         new THREE.PlaneGeometry(20, 20),
-        new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 0.8 })
+        new THREE.MeshStandardMaterial({ color: 0xe8e8e8, roughness: 0.9 }) // Light gray floor
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Professional light gray grid
-    grid = new THREE.GridHelper(20, 20, 0x4a5568, 0x4a5568);
+    // Clean grid like SketchUp
+    grid = new THREE.GridHelper(20, 20, 0xb0b0b0, 0xd0d0d0);
     grid.position.y = 0.02;
     scene.add(grid);
 
     walls = new THREE.Group();
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x374151, side: THREE.DoubleSide });
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, side: THREE.DoubleSide }); // Light gray walls
     
     const backWall = new THREE.Mesh(new THREE.PlaneGeometry(20, 8), wallMat);
     backWall.position.set(0, 4, -10);
@@ -89,6 +105,24 @@ function init() {
     
     scene.add(walls);
 
+    // Create glass roof - professional white/neutral skylight
+    roof = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 20),
+        new THREE.MeshStandardMaterial({ 
+            color: 0xf0f0f0, // Light gray/white
+            roughness: 0.15,
+            metalness: 0.05,
+            transparent: true,
+            opacity: 0.7, // Visible but still glass-like
+            side: THREE.DoubleSide 
+        })
+    );
+    roof.rotation.x = Math.PI / 2;
+    roof.position.y = 8;
+    roof.receiveShadow = true;
+    roof.castShadow = false; // Glass doesn't cast hard shadows
+    scene.add(roof);
+
     window.addEventListener("resize", () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -98,6 +132,7 @@ function init() {
 
 function animate() {
     requestAnimationFrame(animate);
+    updateWalkMode();
     orbitControls.update();
     renderer.render(scene, camera);
 }
@@ -832,8 +867,17 @@ function changeFloorColor(color) {
     setTimeout(() => window.saveSession(), 200);
 }
 
+function changeRoofColor(color) {
+    roof.material.color.setStyle(color);
+    setTimeout(() => window.saveSession(), 200);
+}
+
 function toggleWalls() {
     walls.visible = !walls.visible;
+}
+
+function toggleRoof() {
+    roof.visible = !roof.visible;
 }
 
 function toggleGrid() {
@@ -862,7 +906,7 @@ function updateRoomSize() {
     const divisions = Math.max(10, Math.floor(Math.max(width, length)));
     
     scene.remove(grid);
-    grid = new THREE.GridHelper(Math.max(width, length), divisions, 0x4a5568, 0x4a5568);
+    grid = new THREE.GridHelper(Math.max(width, length), divisions, 0xb0b0b0, 0xd0d0d0);
     grid.position.y = 0.02;
     
     // Scale grid to match rectangular rooms (if width != length)
@@ -892,6 +936,27 @@ function updateRoomSize() {
     walls.add(rightWall);
     
     scene.add(walls);
+    
+    // Update roof to match exact room dimensions
+    const currentRoofColor = roof.material.color.clone();
+    const currentRoofOpacity = roof.material.opacity;
+    scene.remove(roof);
+    roof = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, length),
+        new THREE.MeshStandardMaterial({ 
+            color: currentRoofColor, 
+            roughness: 0.15,
+            metalness: 0.05,
+            transparent: true,
+            opacity: currentRoofOpacity,
+            side: THREE.DoubleSide 
+        })
+    );
+    roof.rotation.x = Math.PI / 2;
+    roof.position.y = 8;
+    roof.receiveShadow = true;
+    roof.castShadow = false;
+    scene.add(roof);
 }
 
 function deleteSelected() {
@@ -1313,4 +1378,144 @@ window.scene = scene;
 
 // Save initial state for undo/redo
 setTimeout(() => saveState(), 1000);
+
+// ===== FIRST-PERSON WALK MODE =====
+
+function toggleWalkMode() {
+    isWalkMode = !isWalkMode;
+    
+    const btn = document.getElementById('walkModeBtn');
+    const controls = document.getElementById('walkControls');
+    
+    if (isWalkMode) {
+        // Enter walk mode
+        orbitControls.enabled = false;
+        
+        // Set camera to eye level (1.7m height)
+        camera.position.y = 1.7;
+        camera.rotation.order = 'YXZ';
+        
+        // Lock pointer for mouse look
+        renderer.domElement.requestPointerLock();
+        
+        // Update button
+        btn.textContent = '🎨 Design Mode';
+        btn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+        
+        // Show controls overlay
+        controls.classList.add('active');
+        
+        // Add event listeners
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('keydown', onKeyDown);
+        document.addEventListener('keyup', onKeyUp);
+    } else {
+        // Exit walk mode
+        orbitControls.enabled = true;
+        
+        // Exit pointer lock
+        document.exitPointerLock();
+        
+        // Reset camera
+        camera.position.set(12, 10, 12);
+        camera.lookAt(0, 0, 0);
+        orbitControls.target.set(0, 0, 0);
+        orbitControls.update();
+        
+        // Update button
+        btn.textContent = '🚶 Walk Mode';
+        btn.style.background = 'linear-gradient(135deg, #84cc16 0%, #65a30d 100%)';
+        
+        // Hide controls overlay
+        controls.classList.remove('active');
+        
+        // Remove event listeners
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('keyup', onKeyUp);
+        
+        // Reset keys
+        keys = { w: false, a: false, s: false, d: false };
+        updateKeyVisuals();
+    }
+}
+
+function onMouseMove(event) {
+    if (!isWalkMode) return;
+    
+    const movementX = event.movementX || 0;
+    const movementY = event.movementY || 0;
+    
+    yaw -= movementX * lookSpeed;
+    pitch -= movementY * lookSpeed;
+    
+    // Limit pitch to prevent flipping
+    pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+    
+    camera.rotation.y = yaw;
+    camera.rotation.x = pitch;
+}
+
+function onKeyDown(event) {
+    if (!isWalkMode) return;
+    
+    switch(event.key.toLowerCase()) {
+        case 'w': keys.w = true; break;
+        case 'a': keys.a = true; break;
+        case 's': keys.s = true; break;
+        case 'd': keys.d = true; break;
+    }
+    updateKeyVisuals();
+}
+
+function onKeyUp(event) {
+    if (!isWalkMode) return;
+    
+    switch(event.key.toLowerCase()) {
+        case 'w': keys.w = false; break;
+        case 'a': keys.a = false; break;
+        case 's': keys.s = false; break;
+        case 'd': keys.d = false; break;
+    }
+    updateKeyVisuals();
+}
+
+function updateKeyVisuals() {
+    const keyW = document.getElementById('keyW');
+    const keyA = document.getElementById('keyA');
+    const keyS = document.getElementById('keyS');
+    const keyD = document.getElementById('keyD');
+    
+    if (keyW) keyW.classList.toggle('active', keys.w);
+    if (keyA) keyA.classList.toggle('active', keys.a);
+    if (keyS) keyS.classList.toggle('active', keys.s);
+    if (keyD) keyD.classList.toggle('active', keys.d);
+}
+
+function updateWalkMode() {
+    if (!isWalkMode) return;
+    
+    // Calculate movement direction
+    const direction = new THREE.Vector3();
+    
+    if (keys.w) direction.z -= 1;
+    if (keys.s) direction.z += 1;
+    if (keys.a) direction.x -= 1;
+    if (keys.d) direction.x += 1;
+    
+    if (direction.length() > 0) {
+        direction.normalize();
+        
+        // Apply only Y rotation (horizontal) to movement, ignore pitch
+        const euler = new THREE.Euler(0, camera.rotation.y, 0, 'YXZ');
+        direction.applyEuler(euler);
+        
+        // Move camera horizontally only
+        camera.position.x += direction.x * moveSpeed;
+        camera.position.z += direction.z * moveSpeed;
+        
+        // Always keep camera at eye level (don't let it go up or down)
+        camera.position.y = 1.7;
+    }
+}
 

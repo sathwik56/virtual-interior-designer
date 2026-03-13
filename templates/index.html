@@ -12,7 +12,7 @@
             margin: 0; 
             overflow: hidden;
             animation: fadeIn 0.5s ease-in;
-            background: #0f172a;
+            background: #ffffff;
         }
         
         @keyframes fadeIn {
@@ -43,14 +43,14 @@
         
         /* Glassmorphism Panels */
         .glass-panel {
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 250, 250, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: none;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 2px solid rgba(226, 232, 240, 0.8);
             border-radius: 0;
             position: fixed;
-            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
         }
         
         /* Login Modal */
@@ -116,85 +116,125 @@
         
         /* Force readable labels */
         .label-text {
-            color: #e2e8f0 !important;
-            font-weight: 600 !important;
+            color: #1e293b !important;
+            font-weight: 700 !important;
             font-size: 11px !important;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            text-shadow: none;
         }
         
         .label-icon {
-            font-size: 14px;
-            color: #94a3b8;
+            font-size: 16px;
+            color: #84cc16;
+            filter: drop-shadow(0 2px 4px rgba(132, 204, 22, 0.3));
         }
         
         /* Professional Buttons */
         .modern-btn {
-            height: 36px;
-            border-radius: 6px;
-            box-shadow: none;
-            transition: all 0.2s ease;
-            font-weight: 500;
+            height: 38px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
             font-size: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 8px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
             cursor: pointer;
-            background: rgba(255, 255, 255, 0.05);
-            color: #e2e8f0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+            color: #1e293b;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .modern-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(132, 204, 22, 0.15), transparent);
+            transition: left 0.5s;
+        }
+        
+        .modern-btn:hover::before {
+            left: 100%;
         }
         
         .modern-btn:hover {
-            transform: none;
-            box-shadow: 0 2px 8px rgba(132, 204, 22, 0.2);
-            background: rgba(132, 204, 22, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(132, 204, 22, 0.3);
+            background: linear-gradient(135deg, rgba(132, 204, 22, 0.15) 0%, rgba(132, 204, 22, 0.08) 100%);
             border-color: #84cc16;
         }
         
         .modern-btn:active {
-            transform: scale(0.98);
+            transform: translateY(0px);
+            box-shadow: 0 2px 6px rgba(132, 204, 22, 0.2);
         }
         
         .modern-btn i {
             font-size: 14px;
-            color: #94a3b8;
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+        
+        .modern-btn:hover i {
+            color: #84cc16;
+            transform: scale(1.1);
         }
         
         /* Primary action button */
         .btn-primary {
-            background: #84cc16 !important;
+            background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%) !important;
             color: white !important;
             border-color: #84cc16 !important;
+            box-shadow: 0 4px 16px rgba(132, 204, 22, 0.4) !important;
         }
         
         .btn-primary:hover {
-            background: #65a30d !important;
+            background: linear-gradient(135deg, #65a30d 0%, #4d7c0f 100%) !important;
             border-color: #65a30d !important;
+            box-shadow: 0 6px 24px rgba(132, 204, 22, 0.6) !important;
+            transform: translateY(-3px) !important;
         }
         
         .btn-primary i {
             color: white !important;
         }
         
+        .btn-primary:hover i {
+            color: white !important;
+        }
+        
         /* Danger button */
         .btn-danger {
-            background: #f44336 !important;
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%) !important;
             color: white !important;
             border-color: #f44336 !important;
+            box-shadow: 0 4px 16px rgba(244, 67, 54, 0.4) !important;
         }
         
         .btn-danger:hover {
-            background: #da190b !important;
+            background: linear-gradient(135deg, #da190b 0%, #b71c1c 100%) !important;
             border-color: #da190b !important;
+            box-shadow: 0 6px 24px rgba(244, 67, 54, 0.6) !important;
+            transform: translateY(-3px) !important;
         }
         
         .btn-danger i {
+            color: white !important;
+        }
+        
+        .btn-danger:hover i {
             color: white !important;
         }
         
@@ -202,14 +242,15 @@
         .section-divider {
             border: none;
             height: 1px;
-            background: rgba(255, 255, 255, 0.1);
-            margin: 16px 0;
+            background: linear-gradient(90deg, transparent, rgba(132, 204, 22, 0.3), transparent);
+            margin: 20px 0;
+            box-shadow: 0 1px 2px rgba(132, 204, 22, 0.1);
         }
         
         /* 3D Viewport Border */
         canvas {
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05), 0 0 10px rgba(132, 204, 22, 0.1);
+            border: 1px solid rgba(132, 204, 22, 0.2);
         }
         
         /* Button row layout */
@@ -221,54 +262,65 @@
         
         /* Dropdown styling */
         select {
-            height: 36px;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
+            height: 38px;
+            border-radius: 8px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
             font-size: 12px;
-            padding: 0 10px;
-            transition: all 0.2s ease;
-            color: #e2e8f0;
+            padding: 0 12px;
+            transition: all 0.3s ease;
+            color: #1e293b;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
         }
         
         select:focus {
             outline: none;
             border-color: #84cc16;
-            box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.1);
+            box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.15), 0 4px 12px rgba(132, 204, 22, 0.2);
+            background: linear-gradient(135deg, rgba(132, 204, 22, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
         }
         
         select option {
-            background: #1e293b;
-            color: #e2e8f0;
+            background: #ffffff;
+            color: #1e293b;
         }
         
         /* Color picker styling */
         input[type="color"] {
-            height: 36px;
+            height: 38px;
             width: 100%;
-            border-radius: 6px;
-            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            border: 2px solid rgba(132, 204, 22, 0.3);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        input[type="color"]:hover {
+            border-color: #84cc16;
+            box-shadow: 0 4px 16px rgba(132, 204, 22, 0.4);
+            transform: translateY(-2px);
         }
         
         /* Number input styling */
         input[type="number"] {
-            height: 36px;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.05);
+            height: 38px;
+            border-radius: 8px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
             font-size: 12px;
-            padding: 0 10px;
-            transition: all 0.2s ease;
+            padding: 0 12px;
+            transition: all 0.3s ease;
             width: 100%;
-            color: #e2e8f0;
+            color: #1e293b;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
         }
         
         input[type="number"]:focus {
             outline: none;
             border-color: #84cc16;
-            box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.1);
+            box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.15), 0 4px 12px rgba(132, 204, 22, 0.2);
+            background: linear-gradient(135deg, rgba(132, 204, 22, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
         }
         
         /* Room size row */
@@ -283,10 +335,12 @@
         }
         
         .room-size-label {
-            color: #94a3b8 !important;
-            font-weight: 500 !important;
+            color: #475569 !important;
+            font-weight: 600 !important;
             font-size: 10px !important;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         /* Collapsible sections */
@@ -295,21 +349,23 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            padding: 2px 0;
+            padding: 8px 12px;
+            margin: 0 -12px;
             transition: all 0.3s ease;
+            border-radius: 8px;
         }
         
         .section-header:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            padding: 2px 4px;
+            background: linear-gradient(135deg, rgba(132, 204, 22, 0.1) 0%, rgba(132, 204, 22, 0.05) 100%);
+            box-shadow: 0 2px 6px rgba(132, 204, 22, 0.15);
         }
         
         .collapse-arrow {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: bold;
-            color: #94a3b8;
+            color: #84cc16;
             transition: transform 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(132, 204, 22, 0.3));
         }
         
         .collapse-arrow.collapsed {
@@ -446,7 +502,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -476,7 +532,7 @@
         }
         
         .loading-text {
-            color: #ffffff;
+            color: #1e293b;
             font-size: 18px;
             font-weight: 600;
             margin-top: 20px;
@@ -490,7 +546,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -510,7 +566,7 @@
         }
         
         .start-modal-title {
-            color: #ffffff;
+            color: #1e293b;
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 40px;
@@ -525,21 +581,21 @@
         }
         
         .start-option-card {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(132, 204, 22, 0.3);
             border-radius: 15px;
             padding: 40px 30px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         
         .start-option-card:hover {
             transform: translateY(-5px);
             border-color: #84cc16;
-            background: rgba(132, 204, 22, 0.1);
+            background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 8px 24px rgba(132, 204, 22, 0.3);
         }
         
@@ -549,7 +605,7 @@
         }
         
         .start-option-title {
-            color: #ffffff;
+            color: #1e293b;
             font-size: 18px;
             font-weight: 700;
             text-transform: uppercase;
@@ -562,19 +618,89 @@
             right: 30px;
             width: 40px;
             height: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(132, 204, 22, 0.3);
             border-radius: 50%;
             font-size: 24px;
-            color: #ffffff;
+            color: #1e293b;
             cursor: pointer;
             transition: all 0.3s ease;
         }
         
         .close-modal-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 1);
             border-color: #84cc16;
             transform: rotate(90deg);
+        }
+        
+        /* Walk Mode Controls Overlay */
+        .walk-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(132, 204, 22, 0.5);
+            z-index: 50;
+            display: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        
+        .walk-controls.active {
+            display: block;
+        }
+        
+        .walk-controls-title {
+            color: #84cc16;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .walk-controls-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 45px);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .walk-key {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+        
+        .walk-key.active {
+            background: rgba(132, 204, 22, 0.5);
+            border-color: #84cc16;
+            transform: scale(0.95);
+        }
+        
+        .walk-key.empty {
+            opacity: 0;
+        }
+        
+        .walk-hint {
+            color: #ffffff;
+            font-size: 10px;
+            text-align: center;
+            margin-top: 6px;
+            opacity: 0.8;
         }
     </style>
 </head>
@@ -584,6 +710,20 @@
 <div id="loadingScreen" class="loading-screen">
     <div class="spinner"></div>
     <div class="loading-text">Loading your workspace...</div>
+</div>
+
+<!-- Walk Mode Controls Overlay -->
+<div id="walkControls" class="walk-controls">
+    <div class="walk-controls-title">🚶 Walk Mode Controls</div>
+    <div class="walk-controls-grid">
+        <div class="walk-key empty"></div>
+        <div class="walk-key" id="keyW">W</div>
+        <div class="walk-key empty"></div>
+        <div class="walk-key" id="keyA">A</div>
+        <div class="walk-key" id="keyS">S</div>
+        <div class="walk-key" id="keyD">D</div>
+    </div>
+    <div class="walk-hint">Move mouse to look around • Click "Design Mode" to exit</div>
 </div>
 
 <!-- Start Options Modal -->
@@ -613,9 +753,9 @@
 <div class="glass-panel left-0 z-10" style="top: 0; height: 100vh; overflow-y: auto; padding: 20px; width: 320px;">
     
     <!-- User Status (if logged in) -->
-    <div id="userStatus" style="display: none; margin-bottom: 16px; padding: 12px; background: rgba(132, 204, 22, 0.1); border-radius: 6px; text-align: center; border: 1px solid rgba(132, 204, 22, 0.3);">
-        <div style="font-size: 11px; font-weight: 600; color: #84cc16;">Logged in as: <span id="usernameDisplay"></span></div>
-        <button onclick="handleLogout()" class="modern-btn btn-danger w-full" style="margin-top: 8px; height: 32px; font-size: 10px;">
+    <div id="userStatus" style="display: none; margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, rgba(132, 204, 22, 0.15) 0%, rgba(132, 204, 22, 0.08) 100%); border-radius: 12px; text-align: center; border: 2px solid rgba(132, 204, 22, 0.4); box-shadow: 0 4px 12px rgba(132, 204, 22, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);">
+        <div style="font-size: 12px; font-weight: 700; color: #65a30d; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5); letter-spacing: 0.5px;">✓ LOGGED IN AS: <span id="usernameDisplay" style="text-transform: uppercase;"></span></div>
+        <button onclick="handleLogout()" class="modern-btn btn-danger w-full" style="margin-top: 12px; height: 36px; font-size: 11px;">
             <i class="fas fa-sign-out-alt"></i> Logout
         </button>
     </div>
@@ -705,12 +845,17 @@
         <div class="section-content expanded" id="materialsContent">
             <div style="margin-bottom: 10px; margin-top: 8px;">
                 <div class="room-size-label" style="margin-bottom: 4px;">Wall Color</div>
-                <input type="color" id="wallColor" value="#374151" onchange="changeWallColor(this.value)">
+                <input type="color" id="wallColor" value="#f5f5f5" onchange="changeWallColor(this.value)">
+            </div>
+            
+            <div style="margin-bottom: 10px;">
+                <div class="room-size-label" style="margin-bottom: 4px;">Floor Color</div>
+                <input type="color" id="floorColor" value="#e8e8e8" onchange="changeFloorColor(this.value)">
             </div>
             
             <div style="margin-bottom: 0;">
-                <div class="room-size-label" style="margin-bottom: 4px;">Floor Color</div>
-                <input type="color" id="floorColor" value="#2d3748" onchange="changeFloorColor(this.value)">
+                <div class="room-size-label" style="margin-bottom: 4px;">Roof Color (Glass)</div>
+                <input type="color" id="roofColor" value="#f0f0f0" onchange="changeRoofColor(this.value)">
             </div>
         </div>
     </div>
@@ -735,6 +880,14 @@
                     <i class="fas fa-border-all"></i> Grid
                 </button>
             </div>
+            
+            <button onclick="toggleRoof()" class="modern-btn w-full" style="margin-bottom: 8px;">
+                <i class="fas fa-home"></i> Toggle Roof
+            </button>
+            
+            <button id="walkModeBtn" onclick="toggleWalkMode()" class="modern-btn btn-primary w-full" style="margin-bottom: 8px; background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%) !important;">
+                <i class="fas fa-walking"></i> 🚶 Walk Mode
+            </button>
             
             <div class="button-row">
                 <button onclick="saveDesign()" class="modern-btn btn-primary flex-1">
@@ -820,6 +973,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         // Check if there's a previous session
         const sessionData = localStorage.getItem('currentSession');
         const startModal = document.getElementById('startModal');
+        const continueCard = document.querySelector('.start-option-card[onclick="continueSession()"]');
         
         if (sessionData) {
             try {
@@ -829,21 +983,50 @@ window.addEventListener('DOMContentLoaded', async () => {
                 
                 // Update session info
                 const sessionInfo = document.getElementById('sessionInfo');
-                if (sessionInfo) {
+                if (sessionInfo && itemCount > 0) {
                     sessionInfo.textContent = `${itemCount} items • ${sessionDate.toLocaleDateString()} ${sessionDate.toLocaleTimeString()}`;
                     sessionInfo.style.color = '#4CAF50';
+                } else if (sessionInfo) {
+                    // No furniture in session
+                    sessionInfo.textContent = 'No previous work found';
+                    sessionInfo.style.color = '#999';
+                    // Disable the continue session card
+                    if (continueCard) {
+                        continueCard.style.opacity = '0.5';
+                        continueCard.style.cursor = 'not-allowed';
+                        continueCard.onclick = function(e) {
+                            e.preventDefault();
+                            alert('No previous session to continue. Start from scratch or load a saved project.');
+                        };
+                    }
                 }
             } catch (error) {
                 console.error('Error parsing session:', error);
             }
+        } else {
+            // No session at all
+            const sessionInfo = document.getElementById('sessionInfo');
+            if (sessionInfo) {
+                sessionInfo.textContent = 'No previous session';
+                sessionInfo.style.color = '#999';
+            }
+            // Disable the continue session card
+            if (continueCard) {
+                continueCard.style.opacity = '0.5';
+                continueCard.style.cursor = 'not-allowed';
+                continueCard.onclick = function(e) {
+                    e.preventDefault();
+                    alert('No previous session to continue. Start from scratch or load a saved project.');
+                };
+            }
         }
         
-        // Show start modal FIRST (before hiding loading screen)
+        // Always show start modal
         if (startModal) {
             startModal.classList.add('show');
         }
         
-        // Then fade out loading screen (slight delay for smooth transition)
+        // Fade out loading screen
         setTimeout(() => {
             const loadingScreen = document.getElementById('loadingScreen');
             loadingScreen.classList.add('fade-out');
