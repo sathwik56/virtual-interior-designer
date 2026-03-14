@@ -38,6 +38,11 @@ with app.app_context():
         print(f"Error initializing database: {e}")
         db.session.rollback()
 
+@app.after_request
+def skip_ngrok_warning(response):
+    response.headers['ngrok-skip-browser-warning'] = 'true'
+    return response
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -201,64 +206,55 @@ def save():
         
         user_id = session['user_id']
         
+        # Room state
+        room_state = data.get('room', {})
+
+        def apply_furniture(design_id):
+            Furniture.query.filter_by(design_id=design_id).delete()
+            for item in furniture_data:
+                furniture = Furniture(
+                    design_id=design_id,
+                    type=item.get('type'),
+                    x=item.get('x'),
+                    y=item.get('y'),
+                    z=item.get('z'),
+                    rotation=item.get('rotation', 0),
+                    scale=item.get('scale', 1.0)
+                )
+                db.session.add(furniture)
+
         # Check if design with this name already exists for this user
         existing_design = Design.query.filter_by(user_id=user_id, name=design_name).first()
         
         if existing_design:
-            # Update existing design
-            # Delete old furniture items
-            Furniture.query.filter_by(design_id=existing_design.id).delete()
-            
-            # Add new furniture items
-            for item in furniture_data:
-                furniture = Furniture(
-                    design_id=existing_design.id,
-                    type=item.get('type'),
-                    x=item.get('x'),
-                    y=item.get('y'),
-                    z=item.get('z'),
-                    rotation=item.get('rotation', 0)
-                )
-                db.session.add(furniture)
-            
-            existing_design.updated_at = datetime.utcnow()
+            apply_furniture(existing_design.id)
+            existing_design.room_width  = room_state.get('width', 20)
+            existing_design.room_length = room_state.get('length', 20)
+            existing_design.room_height = room_state.get('height', 8)
+            existing_design.wall_color  = room_state.get('wallColor', '#f2ede8')
+            existing_design.wall_style  = room_state.get('wallStyle', 'plain')
+            existing_design.floor_color = room_state.get('floorColor', '#dcd5c8')
+            existing_design.roof_color  = room_state.get('roofColor', '#f8f6f2')
+            existing_design.updated_at  = datetime.utcnow()
             db.session.commit()
-            
-            return jsonify({
-                "success": True,
-                "message": "Design updated successfully!",
-                "design_id": existing_design.id,
-                "design_name": existing_design.name
-            })
+            return jsonify({"success": True, "message": "Design updated successfully!", "design_id": existing_design.id, "design_name": existing_design.name})
         else:
-            # Create new design
             new_design = Design(
                 user_id=user_id,
-                name=design_name
+                name=design_name,
+                room_width=room_state.get('width', 20),
+                room_length=room_state.get('length', 20),
+                room_height=room_state.get('height', 8),
+                wall_color=room_state.get('wallColor', '#f2ede8'),
+                wall_style=room_state.get('wallStyle', 'plain'),
+                floor_color=room_state.get('floorColor', '#dcd5c8'),
+                roof_color=room_state.get('roofColor', '#f8f6f2'),
             )
             db.session.add(new_design)
-            db.session.flush()  # Get the design ID
-            
-            # Add furniture items
-            for item in furniture_data:
-                furniture = Furniture(
-                    design_id=new_design.id,
-                    type=item.get('type'),
-                    x=item.get('x'),
-                    y=item.get('y'),
-                    z=item.get('z'),
-                    rotation=item.get('rotation', 0)
-                )
-                db.session.add(furniture)
-            
+            db.session.flush()
+            apply_furniture(new_design.id)
             db.session.commit()
-            
-            return jsonify({
-                "success": True,
-                "message": "Design saved successfully!",
-                "design_id": new_design.id,
-                "design_name": new_design.name
-            })
+            return jsonify({"success": True, "message": "Design saved successfully!", "design_id": new_design.id, "design_name": new_design.name})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -286,13 +282,20 @@ def load():
                 'x': item.x,
                 'y': item.y,
                 'z': item.z,
-                'rotation': item.rotation
+                'rotation': item.rotation,
+                'scale': item.scale or 1.0
             } for item in furniture_items]
             
             return jsonify({
                 "success": True,
                 "design_name": design.name,
-                "furniture": furniture_data
+                "furniture": furniture_data,
+                "room": {
+                    "width": design.room_width, "length": design.room_length,
+                    "height": design.room_height, "wallColor": design.wall_color,
+                    "wallStyle": design.wall_style, "floorColor": design.floor_color,
+                    "roofColor": design.roof_color
+                }
             })
         else:
             # Load most recent design
@@ -307,13 +310,20 @@ def load():
                 'x': item.x,
                 'y': item.y,
                 'z': item.z,
-                'rotation': item.rotation
+                'rotation': item.rotation,
+                'scale': item.scale or 1.0
             } for item in furniture_items]
             
             return jsonify({
                 "success": True,
                 "design_name": latest_design.name,
-                "furniture": furniture_data
+                "furniture": furniture_data,
+                "room": {
+                    "width": latest_design.room_width, "length": latest_design.room_length,
+                    "height": latest_design.room_height, "wallColor": latest_design.wall_color,
+                    "wallStyle": latest_design.wall_style, "floorColor": latest_design.floor_color,
+                    "roofColor": latest_design.roof_color
+                }
             })
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500

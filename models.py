@@ -15,6 +15,14 @@ class Design(db.Model):
     name = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    # Room state
+    room_width = db.Column(db.Float, default=20)
+    room_length = db.Column(db.Float, default=20)
+    room_height = db.Column(db.Float, default=8)
+    wall_color = db.Column(db.String(10), default='#f2ede8')
+    wall_style = db.Column(db.String(20), default='plain')
+    floor_color = db.Column(db.String(10), default='#dcd5c8')
+    roof_color = db.Column(db.String(10), default='#f8f6f2')
     furniture_items = db.relationship('Furniture', backref='design', lazy=True, cascade='all, delete-orphan')
 
 class Furniture(db.Model):
@@ -25,4 +33,5 @@ class Furniture(db.Model):
     y = db.Column(db.Float)
     z = db.Column(db.Float)
     rotation = db.Column(db.Float, default=0)
+    scale = db.Column(db.Float, default=1.0)
 

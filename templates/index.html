@@ -43,14 +43,14 @@
         
         /* Glassmorphism Panels */
         .glass-panel {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 250, 250, 0.98) 100%);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.99) 0%, rgba(246, 248, 250, 0.99) 100%);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: none;
-            border-right: 2px solid rgba(226, 232, 240, 0.8);
+            border-right: 1px solid rgba(203, 213, 225, 0.6);
             border-radius: 0;
             position: fixed;
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 2px 0 24px rgba(0, 0, 0, 0.1), inset -1px 0 0 rgba(255,255,255,0.8);
         }
         
         /* Login Modal */
@@ -242,15 +242,14 @@
         .section-divider {
             border: none;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(132, 204, 22, 0.3), transparent);
-            margin: 20px 0;
-            box-shadow: 0 1px 2px rgba(132, 204, 22, 0.1);
+            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.4), transparent);
+            margin: 16px 0;
         }
         
         /* 3D Viewport Border */
         canvas {
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05), 0 0 10px rgba(132, 204, 22, 0.1);
-            border: 1px solid rgba(132, 204, 22, 0.2);
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(100, 116, 139, 0.25);
         }
         
         /* Button row layout */
@@ -729,21 +728,64 @@
 <!-- Start Options Modal -->
 <div id="startModal" class="start-modal-overlay">
     <button class="close-modal-btn" onclick="closeStartModal()">×</button>
-    <h2 class="start-modal-title">Choose how you'd like to start</h2>
-    <div class="start-options-grid">
-        <div class="start-option-card" onclick="continueSession()">
-            <div class="start-option-icon">🔄</div>
-            <div class="start-option-title">Continue Session</div>
-            <p id="sessionInfo" style="font-size: 11px; color: #a0a0a0; margin-top: 8px;">No previous session</p>
+
+    <!-- Step 1: How to start -->
+    <div id="step1">
+        <h2 class="start-modal-title">Choose how you'd like to start</h2>
+        <div class="start-options-grid">
+            <div class="start-option-card" onclick="continueSession()">
+                <div class="start-option-icon">🔄</div>
+                <div class="start-option-title">Continue Session</div>
+                <p id="sessionInfo" style="font-size: 11px; color: #a0a0a0; margin-top: 8px;">No previous session</p>
+            </div>
+            <div class="start-option-card" onclick="goToStep2()">
+                <div class="start-option-icon">✏️</div>
+                <div class="start-option-title">Start from Scratch</div>
+            </div>
+            <div class="start-option-card" onclick="loadMyProjects()">
+                <div class="start-option-icon">📁</div>
+                <div class="start-option-title">My Projects</div>
+            </div>
         </div>
-        <div class="start-option-card" onclick="startFromScratch()">
-            <div class="start-option-icon">✏️</div>
-            <div class="start-option-title">Start from Scratch</div>
+    </div>
+
+    <!-- Step 2: What are you designing? -->
+    <div id="step2" style="display:none; width:100%; max-width:960px;">
+        <button onclick="goBackToStep1()" style="background:none;border:none;color:#64748b;font-size:14px;cursor:pointer;margin-bottom:20px;display:flex;align-items:center;gap:6px;">
+            ← Back
+        </button>
+        <h2 class="start-modal-title">What are you designing?</h2>
+        <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:16px; max-width:960px;">
+            <div class="start-option-card" onclick="selectCategory('home')">
+                <div class="start-option-icon">🏠</div>
+                <div class="start-option-title">Home</div>
+                <p style="font-size:11px;color:#64748b;margin-top:8px;">Bedroom, Living Room, Kitchen</p>
+            </div>
+            <div class="start-option-card" onclick="selectCategory('office')">
+                <div class="start-option-icon">🏢</div>
+                <div class="start-option-title">Office</div>
+                <p style="font-size:11px;color:#64748b;margin-top:8px;">Workstation, Conference, Reception</p>
+            </div>
+            <div class="start-option-card" onclick="selectCategory('commercial')">
+                <div class="start-option-icon">🏪</div>
+                <div class="start-option-title">Commercial</div>
+                <p style="font-size:11px;color:#64748b;margin-top:8px;">Shop, Restaurant, Cafe</p>
+            </div>
+            <div class="start-option-card" onclick="selectCategory('other')">
+                <div class="start-option-icon">🏫</div>
+                <div class="start-option-title">Other</div>
+                <p style="font-size:11px;color:#64748b;margin-top:8px;">Classroom, Gym, Library</p>
+            </div>
         </div>
-        <div class="start-option-card" onclick="loadMyProjects()">
-            <div class="start-option-icon">📁</div>
-            <div class="start-option-title">My Projects</div>
-        </div>
+    </div>
+
+    <!-- Step 3: Pick room type -->
+    <div id="step3" style="display:none; width:100%; max-width:960px;">
+        <button onclick="goBackToStep2()" style="background:none;border:none;color:#64748b;font-size:14px;cursor:pointer;margin-bottom:20px;display:flex;align-items:center;gap:6px;">
+            ← Back
+        </button>
+        <h2 class="start-modal-title" id="step3Title">Choose Room Type</h2>
+        <div id="roomTypeGrid" style="display:grid; grid-template-columns: repeat(3,1fr); gap:16px; max-width:720px;"></div>
     </div>
 </div>
 
@@ -760,6 +802,15 @@
         </button>
     </div>
     
+    <!-- Room Type Badge -->
+    <div id="roomTypeBadge" style="display:none; margin-bottom:16px; padding:10px 14px; background:linear-gradient(135deg,rgba(132,204,22,0.15),rgba(132,204,22,0.05)); border-radius:10px; border:1.5px solid rgba(132,204,22,0.4); display:flex; align-items:center; justify-content:space-between;">
+        <div style="font-size:12px; font-weight:700; color:#4d7c0f;">
+            <span id="roomTypeBadgeIcon" style="margin-right:6px;"></span>
+            <span id="roomTypeBadgeLabel"></span>
+        </div>
+        <button onclick="goToStep2(); document.getElementById('startModal').classList.add('show'); document.getElementById('startModal').classList.remove('hidden');" style="background:none;border:none;font-size:10px;color:#84cc16;cursor:pointer;font-weight:600;">Change</button>
+    </div>
+
     <!-- Room Size Section -->
     <div style="margin-bottom: 16px;">
         <div class="section-header" onclick="toggleSection('roomSize')">
@@ -780,6 +831,12 @@
                     <input type="number" id="roomLength" value="20" min="5" max="50" step="1" onchange="updateRoomSize()">
                 </div>
             </div>
+            <div class="room-size-row">
+                <div class="room-size-item">
+                    <div class="room-size-label">Wall Height (m)</div>
+                    <input type="number" id="roomHeight" value="8" min="2" max="20" step="0.5" onchange="updateRoomSize()">
+                </div>
+            </div>
         </div>
     </div>
     
@@ -797,37 +854,40 @@
         <div class="section-content expanded" id="furnitureContent">
             <select id="furnitureSelect" class="w-full" style="margin-top: 8px; margin-bottom: 10px;">
                 <option value="">Choose Furniture</option>
-                <option value="bed">🛏️ Bed</option>
-                <option value="sofa">🛋️ Sofa</option>
-                <option value="table">🪑 Dining Table</option>
-                <option value="chair">💺 Chair</option>
-                <option value="cabinet">🗄️ Cabinet</option>
-                <option value="desk">🖥️ Desk</option>
-                <option value="bookshelf">📚 Bookshelf</option>
-                <option value="nightstand">🕯️ Nightstand</option>
-                <option value="wardrobe">👔 Wardrobe</option>
-                <option value="coffeetable">☕ Coffee Table</option>
-                <option value="tvstand">📺 TV Stand</option>
-                <option value="dresser">💄 Dresser</option>
-                <option value="armchair">🪑 Armchair</option>
-                <option value="diningchair">🍽️ Dining Chair</option>
-                <option value="lamp">💡 Lamp</option>
-                <option value="interiorwall">🧱 Interior Wall</option>
-                <option value="doorwall">🚪 Wall with Door</option>
-                <option value="windowwall">🪟 Wall with Window</option>
-                <option value="glasswall">🔲 Glass Wall</option>
-                <option value="straightstairs">🪜 Straight Staircase</option>
-                <option value="lshapedstairs">🔄 L-Shaped Stairs</option>
-                <option value="spiralstairs">🌀 Spiral Staircase</option>
             </select>
             
             <button onclick="addSelectedFurniture()" class="modern-btn btn-primary text-white w-full" style="margin-bottom: 8px;">
                 <i class="fas fa-plus"></i> Add to Scene
             </button>
             
-            <button onclick="rotateSelected()" class="modern-btn w-full" style="margin-bottom: 0;">
+            <button onclick="rotateSelected()" class="modern-btn w-full" style="margin-bottom: 8px;">
                 <i class="fas fa-rotate-right"></i> Rotate Selected
             </button>
+
+            <!-- Move Up / Down -->
+            <div class="button-row" style="margin-bottom: 8px;">
+                <button onclick="moveSelectedY(0.1)" class="modern-btn flex-1" title="Move up (Q key)">
+                    <i class="fas fa-arrow-up"></i> Move Up
+                </button>
+                <button onclick="moveSelectedY(-0.1)" class="modern-btn flex-1" title="Move down (E key)">
+                    <i class="fas fa-arrow-down"></i> Move Down
+                </button>
+            </div>
+
+            <!-- Scale Selected Furniture -->
+            <div id="scaleControls" style="margin-top: 4px;">
+                <div class="room-size-label" style="margin-bottom: 6px;">Scale Selected Item</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button onclick="scaleSelected(-0.1)" class="modern-btn" style="width:38px; height:38px; flex-shrink:0; font-size:18px; font-weight:700;">−</button>
+                    <input type="range" id="scaleSlider" min="0.2" max="3" step="0.05" value="1"
+                        oninput="applyScaleFromSlider(this.value)"
+                        style="flex:1; height:6px; accent-color:#84cc16; cursor:pointer;">
+                    <button onclick="scaleSelected(0.1)" class="modern-btn" style="width:38px; height:38px; flex-shrink:0; font-size:18px; font-weight:700;">+</button>
+                </div>
+                <div style="text-align:center; font-size:10px; color:#64748b; margin-top:4px;">
+                    Size: <span id="scaleValue">1.0x</span>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -845,12 +905,23 @@
         <div class="section-content expanded" id="materialsContent">
             <div style="margin-bottom: 10px; margin-top: 8px;">
                 <div class="room-size-label" style="margin-bottom: 4px;">Wall Color</div>
-                <input type="color" id="wallColor" value="#f5f5f5" onchange="changeWallColor(this.value)">
+                <input type="color" id="wallColor" value="#f2ede8" onchange="changeWallColor(this.value)">
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <div class="room-size-label" style="margin-bottom: 4px;">Wall Style</div>
+                <select id="wallStyleSelect" class="w-full" onchange="changeWallStyle(this.value)">
+                    <option value="plain">🟫 Plain / Painted</option>
+                    <option value="brick">🧱 Brick</option>
+                    <option value="woodpanel">🪵 Wood Panel</option>
+                    <option value="tile">⬜ Tile</option>
+                    <option value="concrete">🔲 Concrete</option>
+                </select>
             </div>
             
             <div style="margin-bottom: 10px;">
                 <div class="room-size-label" style="margin-bottom: 4px;">Floor Color</div>
-                <input type="color" id="floorColor" value="#e8e8e8" onchange="changeFloorColor(this.value)">
+                <input type="color" id="floorColor" value="#dcd5c8" onchange="changeFloorColor(this.value)">
             </div>
             
             <div style="margin-bottom: 0;">
@@ -1025,6 +1096,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (startModal) {
             startModal.classList.add('show');
         }
+        // Default: populate all furniture until room type is chosen
+        populateFurnitureDropdown(null);
         
         // Fade out loading screen
         setTimeout(() => {
@@ -1044,10 +1117,212 @@ function closeStartModal() {
     }
 }
 
+// ── Room type data ────────────────────────────────────────────────
+const ROOM_CATEGORIES = {
+    home: {
+        label: 'Home',
+        icon: '🏠',
+        rooms: [
+            { id: 'bedroom',    label: 'Bedroom',     icon: '🛏️' },
+            { id: 'livingroom', label: 'Living Room',  icon: '🛋️' },
+            { id: 'kitchen',    label: 'Kitchen',      icon: '🍳' },
+            { id: 'bathroom',   label: 'Bathroom',     icon: '🚿' },
+        ]
+    },
+    office: {
+        label: 'Office',
+        icon: '🏢',
+        rooms: [
+            { id: 'workstation',   label: 'Workstation',     icon: '💻' },
+            { id: 'conference',    label: 'Conference Room',  icon: '📊' },
+            { id: 'reception',     label: 'Reception',        icon: '🪑' },
+        ]
+    },
+    commercial: {
+        label: 'Commercial',
+        icon: '🏪',
+        rooms: [
+            { id: 'restaurant', label: 'Restaurant', icon: '🍽️' },
+            { id: 'cafe',       label: 'Cafe',        icon: '☕' },
+            { id: 'shop',       label: 'Shop',        icon: '🛍️' },
+        ]
+    },
+    other: {
+        label: 'Other',
+        icon: '🏫',
+        rooms: [
+            { id: 'classroom', label: 'Classroom', icon: '📚' },
+            { id: 'gym',       label: 'Gym',        icon: '🏋️' },
+            { id: 'library',   label: 'Library',    icon: '📖' },
+        ]
+    }
+};
+
+// Furniture available per room type (value → label)
+const ROOM_FURNITURE = {
+    bedroom:     [['bed','🛏️ Bed'],['wardrobe','👔 Wardrobe'],['nightstand','🕯️ Nightstand'],['dresser','💄 Dresser'],['lamp','💡 Lamp'],['armchair','🪑 Armchair'],['mirror','🪞 Mirror'],['curtain','🪟 Curtain'],['rug','🟥 Rug'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['straightstairs','🪜 Straight Staircase'],['spiralstairs','🌀 Spiral Staircase']],
+    livingroom:  [['sofa','🛋️ Sofa'],['armchair','🪑 Armchair'],['coffeetable','☕ Coffee Table'],['tvstand','📺 TV Stand'],['bookshelf','📚 Bookshelf'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['mirror','🪞 Mirror'],['rug','🟥 Rug'],['curtain','🪟 Curtain'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall']],
+    kitchen:     [['table','🪑 Dining Table'],['diningchair','🍽️ Dining Chair'],['cabinet','🗄️ Cabinet'],['kitchencounter','🍳 Kitchen Counter'],['kitchenisland','🏝️ Kitchen Island'],['fridge','🧊 Fridge'],['stove','🔥 Stove'],['lamp','💡 Lamp'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window']],
+    bathroom:    [['bathtub','🛁 Bathtub'],['toilet','🚽 Toilet'],['sink','🚿 Sink'],['cabinet','🗄️ Cabinet'],['mirror','🪞 Mirror'],['lamp','💡 Lamp'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window']],
+    workstation: [['desk','🖥️ Desk'],['chair','💺 Chair'],['bookshelf','📚 Bookshelf'],['cabinet','🗄️ Cabinet'],['filingcabinet','🗂️ Filing Cabinet'],['whiteboard','📋 Whiteboard'],['lamp','💡 Lamp'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall']],
+    conference:  [['table','🪑 Conference Table'],['chair','💺 Chair'],['diningchair','🍽️ Side Chair'],['bookshelf','📚 Bookshelf'],['whiteboard','📋 Whiteboard'],['lamp','💡 Lamp'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['glasswall','🔲 Glass Wall']],
+    reception:   [['sofa','🛋️ Sofa'],['armchair','🪑 Armchair'],['coffeetable','☕ Coffee Table'],['desk','🖥️ Desk'],['chair','💺 Chair'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['plantpot','🪴 Plant'],['mirror','🪞 Mirror'],['officepartition','🔲 Office Partition'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['glasswall','🔲 Glass Wall'],['straightstairs','🪜 Staircase']],
+    restaurant:  [['table','🪑 Dining Table'],['diningchair','🍽️ Dining Chair'],['armchair','🪑 Armchair'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['mirror','🪞 Mirror'],['plantpot','🪴 Plant'],['rug','🟥 Rug'],['curtain','🪟 Curtain'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall']],
+    cafe:        [['coffeetable','☕ Coffee Table'],['armchair','🪑 Armchair'],['diningchair','🍽️ Chair'],['table','🪑 Table'],['lamp','💡 Lamp'],['displayshelf','🏪 Display Shelf'],['plantpot','🪴 Plant'],['mirror','🪞 Mirror'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window']],
+    shop:        [['displayshelf','🏪 Display Shelf'],['cashcounter','💰 Cash Counter'],['cabinet','🗄️ Display Cabinet'],['desk','🖥️ Counter Desk'],['chair','💺 Chair'],['lamp','💡 Lamp'],['mirror','🪞 Mirror'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall']],
+    classroom:   [['desk','🖥️ Student Desk'],['chair','💺 Chair'],['table','🪑 Teacher Table'],['bookshelf','📚 Bookshelf'],['cabinet','🗄️ Cabinet'],['whiteboard','📋 Whiteboard'],['lamp','💡 Lamp'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window']],
+    gym:         [['lamp','💡 Lamp'],['cabinet','🗄️ Locker'],['mirror','🪞 Mirror'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall'],['straightstairs','🪜 Staircase']],
+    library:     [['bookshelf','📚 Bookshelf'],['displayshelf','🏪 Display Shelf'],['table','🪑 Reading Table'],['chair','💺 Chair'],['armchair','🪑 Armchair'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window']],
+};
+
+// Default room settings per type
+// wall = paint color, floor = flooring material color, roof = ceiling color
+const ROOM_DEFAULTS = {
+    // HOME
+    bedroom:     { width:12, length:10, height:3,   wall:'#f0e8df', floor:'#b89a72', roof:'#faf7f4', wallStyle:'plain' },
+    livingroom:  { width:16, length:14, height:3,   wall:'#e8e0d8', floor:'#8b6f47', roof:'#f5f2ee', wallStyle:'plain' },
+    kitchen:     { width:10, length:8,  height:3,   wall:'#f5f5f0', floor:'#c8c0b0', roof:'#ffffff', wallStyle:'tile' },
+    bathroom:    { width:6,  length:5,  height:3,   wall:'#dce8f0', floor:'#b8ccd8', roof:'#f0f8ff', wallStyle:'tile' },
+    // OFFICE
+    workstation: { width:10, length:8,  height:3,   wall:'#e8edf2', floor:'#9aabb8', roof:'#f4f6f8', wallStyle:'plain' },
+    conference:  { width:14, length:10, height:3,   wall:'#2c3e50', floor:'#c8c0b0', roof:'#1a252f', wallStyle:'woodpanel' },
+    reception:   { width:12, length:10, height:4,   wall:'#f0ece4', floor:'#c0a882', roof:'#faf8f4', wallStyle:'plain' },
+    // COMMERCIAL
+    restaurant:  { width:18, length:16, height:4,   wall:'#3d2b1f', floor:'#6b4c30', roof:'#2a1e14', wallStyle:'brick' },
+    cafe:        { width:12, length:10, height:3,   wall:'#e8d8c4', floor:'#a07850', roof:'#f0e8d8', wallStyle:'brick' },
+    shop:        { width:16, length:14, height:4,   wall:'#f8f8f8', floor:'#e0e0e0', roof:'#ffffff', wallStyle:'concrete' },
+    // OTHER
+    classroom:   { width:16, length:12, height:3,   wall:'#e8f0e8', floor:'#c8c090', roof:'#f5f5f0', wallStyle:'plain' },
+    gym:         { width:20, length:18, height:5,   wall:'#2a2a2a', floor:'#4a4a4a', roof:'#1a1a1a', wallStyle:'concrete' },
+    library:     { width:18, length:16, height:4,   wall:'#c8b898', floor:'#7a5c38', roof:'#e8d8c0', wallStyle:'woodpanel' },
+};
+
+let selectedCategory = null;
+
+function goToStep2() {
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('step3').style.display = 'none';
+}
+
+function goBackToStep1() {
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
+}
+
+function goBackToStep2() {
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('step3').style.display = 'none';
+}
+
+function selectCategory(cat) {
+    selectedCategory = cat;
+    const catData = ROOM_CATEGORIES[cat];
+    document.getElementById('step3Title').textContent = `Choose ${catData.label} Room Type`;
+
+    // Build room type cards
+    const grid = document.getElementById('roomTypeGrid');
+    grid.innerHTML = '';
+    catData.rooms.forEach(room => {
+        const card = document.createElement('div');
+        card.className = 'start-option-card';
+        card.style.padding = '28px 20px';
+        card.innerHTML = `<div class="start-option-icon" style="font-size:48px;">${room.icon}</div>
+                          <div class="start-option-title" style="font-size:15px;">${room.label}</div>`;
+        card.onclick = () => applyRoomType(cat, room);
+        grid.appendChild(card);
+    });
+
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'block';
+}
+
+function applyRoomType(cat, room) {
+    // Clear scene
+    closeStartModal();
+    window.clearSession();
+    if (window.furnitureList) {
+        window.furnitureList.forEach(obj => { if (window.scene) window.scene.remove(obj); });
+        window.furnitureList = [];
+    }
+
+    // Apply room defaults — dimensions and wall style only, NOT colors
+    const defaults = ROOM_DEFAULTS[room.id] || { width:16, length:14, height:3, wallStyle:'plain' };
+    document.getElementById('roomWidth').value  = defaults.width;
+    document.getElementById('roomLength').value = defaults.length;
+    document.getElementById('roomHeight').value = defaults.height;
+    if (window.updateRoomSize) window.updateRoomSize();
+
+    // Apply wall style
+    const styleSelect = document.getElementById('wallStyleSelect');
+    const roomStyle = defaults.wallStyle || 'plain';
+    if (styleSelect) styleSelect.value = roomStyle;
+    if (window.changeWallStyle) window.changeWallStyle(roomStyle);
+
+    // Populate furniture dropdown
+    populateFurnitureDropdown(room.id);
+
+    // Show badge
+    const badge = document.getElementById('roomTypeBadge');
+    badge.style.display = 'flex';
+    document.getElementById('roomTypeBadgeIcon').textContent  = room.icon;
+    document.getElementById('roomTypeBadgeLabel').textContent = `${ROOM_CATEGORIES[cat].label} › ${room.label}`;
+
+    // Save to session
+    localStorage.setItem('currentRoomType', JSON.stringify({ cat, room }));
+}
+
+function populateFurnitureDropdown(roomId) {
+    const select = document.getElementById('furnitureSelect');
+    const items  = ROOM_FURNITURE[roomId] || getAllFurniture();
+    select.innerHTML = '<option value="">Choose Furniture</option>';
+    items.forEach(([val, label]) => {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = label;
+        select.appendChild(opt);
+    });
+}
+
+function getAllFurniture() {
+    return [
+        ['bed','🛏️ Bed'],['sofa','🛋️ Sofa'],['table','🪑 Dining Table'],['chair','💺 Chair'],
+        ['cabinet','🗄️ Cabinet'],['desk','🖥️ Desk'],['bookshelf','📚 Bookshelf'],
+        ['nightstand','🕯️ Nightstand'],['wardrobe','👔 Wardrobe'],['coffeetable','☕ Coffee Table'],
+        ['tvstand','📺 TV Stand'],['dresser','💄 Dresser'],['armchair','🪑 Armchair'],
+        ['diningchair','🍽️ Dining Chair'],['lamp','💡 Lamp'],
+        ['bathtub','🛁 Bathtub'],['toilet','🚽 Toilet'],['sink','🚿 Sink'],
+        ['kitchencounter','🍳 Kitchen Counter'],['kitchenisland','🏝️ Kitchen Island'],
+        ['fridge','🧊 Fridge'],['stove','🔥 Stove'],
+        ['officepartition','🔲 Office Partition'],['whiteboard','📋 Whiteboard'],['filingcabinet','🗂️ Filing Cabinet'],
+        ['displayshelf','🏪 Display Shelf'],['cashcounter','💰 Cash Counter'],
+        ['plantpot','🪴 Plant'],['rug','🟥 Rug'],['curtain','🪟 Curtain'],['mirror','🪞 Mirror'],
+        ['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],
+        ['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall'],
+        ['straightstairs','🪜 Straight Staircase'],['lshapedstairs','🔄 L-Shaped Stairs'],
+        ['ushapedstairs','🔃 U-Shaped Stairs'],['spiralstairs','🌀 Spiral Staircase']
+    ];
+}
+
 function continueSession() {
-    // Load the previous session
     closeStartModal();
     const loaded = window.loadSession();
+    // Restore room type badge if saved
+    const savedRoomType = localStorage.getItem('currentRoomType');
+    if (savedRoomType) {
+        try {
+            const { cat, room } = JSON.parse(savedRoomType);
+            populateFurnitureDropdown(room.id);
+            const badge = document.getElementById('roomTypeBadge');
+            badge.style.display = 'flex';
+            document.getElementById('roomTypeBadgeIcon').textContent  = room.icon;
+            document.getElementById('roomTypeBadgeLabel').textContent = `${ROOM_CATEGORIES[cat].label} › ${room.label}`;
+        } catch(e) { populateFurnitureDropdown(null); }
+    } else {
+        populateFurnitureDropdown(null);
+    }
     if (loaded) {
         alert('Previous session restored!');
     } else {
@@ -1056,26 +1331,12 @@ function continueSession() {
 }
 
 function startFromScratch() {
-    // Clear session and start fresh
-    closeStartModal();
-    window.clearSession();
-    
-    // Clear the scene
-    if (window.furnitureList) {
-        window.furnitureList.forEach(obj => {
-            if (window.scene) {
-                window.scene.remove(obj);
-            }
-        });
-        window.furnitureList = [];
-    }
-    
-    console.log('Starting fresh session');
+    goToStep2();
 }
 
 function loadMyProjects() {
-    // Close modal and trigger manage designs
     closeStartModal();
+    populateFurnitureDropdown(null);
     manageDesigns();
 }
 
