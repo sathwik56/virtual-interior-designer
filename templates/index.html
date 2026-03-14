@@ -793,7 +793,16 @@
 
 <!-- Designer Panel -->
 <div class="glass-panel left-0 z-10" style="top: 0; height: 100vh; overflow-y: auto; padding: 20px; width: 320px;">
-    
+
+    <!-- Logo / Home link -->
+    <a href="/" onclick="document.body.style.opacity='0.5'" style="display:flex; align-items:center; gap:10px; text-decoration:none; margin-bottom:18px; padding:10px 12px; border-radius:10px; transition:background 0.2s; background:linear-gradient(135deg,rgba(132,204,22,0.1),rgba(132,204,22,0.04)); border:1px solid rgba(132,204,22,0.25);">
+        <span style="font-size:22px;">🏠</span>
+        <div>
+            <div style="font-size:13px; font-weight:800; color:#1e293b; letter-spacing:0.5px;">INTERIOR DESIGNER</div>
+            <div style="font-size:9px; color:#84cc16; font-weight:600; letter-spacing:1px;">← BACK TO HOME</div>
+        </div>
+    </a>
+
     <!-- User Status (if logged in) -->
     <div id="userStatus" style="display: none; margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, rgba(132, 204, 22, 0.15) 0%, rgba(132, 204, 22, 0.08) 100%); border-radius: 12px; text-align: center; border: 2px solid rgba(132, 204, 22, 0.4); box-shadow: 0 4px 12px rgba(132, 204, 22, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);">
         <div style="font-size: 12px; font-weight: 700; color: #65a30d; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5); letter-spacing: 0.5px;">✓ LOGGED IN AS: <span id="usernameDisplay" style="text-transform: uppercase;"></span></div>
