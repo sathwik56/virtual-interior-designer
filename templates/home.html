@@ -5,430 +5,389 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Virtual Interior Designer - Design Any Space in 3D</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
-        * {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .hero-overlay {
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.6) 100%);
-        }
-        
-        .absolute.inset-0.w-full.h-full.bg-cover {
-            z-index: 0;
-        }
-        
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
 
-        
-        .start-button {
-            background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 40px rgba(132, 204, 22, 0.5), 0 0 60px rgba(132, 204, 22, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .start-button::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transform: rotate(45deg);
-            animation: shimmer 3s infinite;
-        }
-        
-        @keyframes shimmer {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
-        
-        .start-button:hover {
-            background: linear-gradient(135deg, #65a30d 0%, #4d7c0f 100%);
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 20px 60px rgba(132, 204, 22, 0.7), 0 0 80px rgba(132, 204, 22, 0.5);
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .animate-fade-in-up {
-            animation: fadeInUp 0.8s ease-out forwards;
-        }
-        
-        .delay-1 {
-            animation-delay: 0.2s;
-            opacity: 0;
-        }
-        
-        .delay-2 {
-            animation-delay: 0.4s;
-            opacity: 0;
-        }
-        
-        .delay-3 {
-            animation-delay: 0.6s;
-            opacity: 0;
-        }
-        
-        /* Page Transition */
         body {
+            margin: 0; overflow: hidden;
             animation: fadeIn 0.5s ease-in;
         }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        .page-transition { animation: fadeOut 0.3s ease-out forwards; }
+        @keyframes fadeOut { from { opacity:1; } to { opacity:0; } }
+
+        /* ── NAV ── */
+        .nav-bar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 32px;
+            background: rgba(0,0,0,0.35);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
-        
-        .page-transition {
-            animation: fadeOut 0.3s ease-out forwards;
+        .nav-logo {
+            font-size: 15px; font-weight: 700; color: #fff;
+            letter-spacing: 1.5px; text-transform: uppercase;
         }
-        
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-            }
+        .nav-logo span { color: #84cc16; }
+        .nav-signin {
+            height: 36px; padding: 0 20px;
+            border-radius: 8px;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: #fff; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
         }
-        
-        /* Login Modal */
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
+        .nav-signin:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.5); }
+
+        /* ── HERO ── */
+        .hero-bg {
+            position: fixed; inset: 0;
+            background-image: url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000');
+            background-size: cover; background-position: center;
         }
-        
-        .login-modal {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
-            backdrop-filter: blur(25px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 40px;
-            width: 350px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        .hero-overlay {
+            position: fixed; inset: 0;
+            background: linear-gradient(160deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.65) 100%);
         }
-        
-        .login-input {
-            width: 100%;
-            height: 45px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.5);
-            padding: 0 15px;
-            font-size: 14px;
-            margin-bottom: 15px;
-            color: #000;
+
+        /* ── HERO CONTENT ── */
+        .hero-content {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding-bottom: 130px;
+            text-align: center;
         }
-        
-        .login-input::placeholder {
-            color: #666;
-            opacity: 1;
+        .hero-tag {
+            display: inline-block;
+            background: rgba(132,204,22,0.18);
+            border: 1px solid rgba(132,204,22,0.45);
+            color: #a3e635; font-size: 11px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            padding: 5px 16px; border-radius: 20px;
+            margin-bottom: 22px;
+            animation: fadeUp 0.7s ease-out both;
         }
-        
-        .login-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        .hero-title {
+            font-size: clamp(36px, 6vw, 72px);
+            font-weight: 900; color: #fff;
+            line-height: 1.08; letter-spacing: -1px;
+            margin: 0 0 20px;
+            animation: fadeUp 0.7s 0.15s ease-out both;
         }
-        
-        .modern-btn {
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
+        .hero-title span { color: #84cc16; }
+        .hero-sub {
+            font-size: clamp(14px, 1.5vw, 17px);
+            color: #cbd5e1; font-weight: 400; line-height: 1.7;
+            max-width: 560px; margin: 0 0 36px;
+            animation: fadeUp 0.7s 0.3s ease-out both;
+        }
+        .hero-cta {
+            display: inline-block;
+            background: #84cc16; color: #fff;
+            font-size: 14px; font-weight: 700;
+            letter-spacing: 1px; text-transform: uppercase;
+            padding: 14px 40px; border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 24px rgba(132,204,22,0.35);
+            animation: fadeUp 0.7s 0.45s ease-out both;
+        }
+        .hero-cta:hover {
+            background: #65a30d;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(132,204,22,0.45);
+        }
+
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(20px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        /* ── BOTTOM CARDS ── */
+        .cards-row {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+            padding: 0 24px 20px;
+        }
+        .cards-grid {
+            max-width: 860px; margin: 0 auto;
+            display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+            animation: fadeUp 0.7s 0.6s ease-out both;
+        }
+        .card {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 10px; padding: 14px 12px;
+            text-align: center; text-decoration: none;
+            transition: background 0.2s, border-color 0.2s, transform 0.2s;
             cursor: pointer;
         }
-        
-        .modern-btn:hover {
+        .card:hover {
+            background: rgba(132,204,22,0.15);
+            border-color: rgba(132,204,22,0.5);
             transform: translateY(-2px);
-            background: #65a30d !important;
-            box-shadow: 0 4px 12px rgba(132, 204, 22, 0.3);
+        }
+        .card-icon {
+            width: 32px; height: 32px; margin: 0 auto 8px;
+            opacity: 0.85;
+        }
+        .card-title {
+            color: #fff; font-size: 11px; font-weight: 700;
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+        .card-sub {
+            color: #94a3b8; font-size: 10px; margin-top: 4px; line-height: 1.4;
+        }
+
+        /* ── MODAL OVERLAY ── */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-overlay.hidden { display: none; }
+
+        /* ── MODAL BOX ── */
+        .modal-box {
+            background: #fff;
+            border-radius: 16px;
+            width: 380px; max-width: 95vw;
+            padding: 36px 32px 28px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+            position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 14px; right: 16px;
+            background: none; border: none;
+            font-size: 20px; color: #9ca3af; cursor: pointer; line-height: 1;
+        }
+        .modal-close:hover { color: #374151; }
+        .modal-title {
+            font-size: 20px; font-weight: 800; color: #111;
+            text-align: center; margin-bottom: 6px; letter-spacing: -0.3px;
+        }
+        .modal-subtitle {
+            font-size: 12px; color: #6b7280;
+            text-align: center; margin-bottom: 24px;
+        }
+        .modal-input {
+            width: 100%; height: 44px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0 14px; font-size: 14px; color: #111;
+            margin-bottom: 12px; outline: none;
+            transition: border-color 0.2s;
+        }
+        .modal-input:focus { border-color: #84cc16; box-shadow: 0 0 0 3px rgba(132,204,22,0.12); }
+        .modal-input::placeholder { color: #9ca3af; }
+        .modal-btn {
+            width: 100%; height: 44px;
+            background: #84cc16; color: #fff;
+            border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 700;
+            cursor: pointer; margin-top: 4px;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .modal-btn:hover { background: #65a30d; transform: translateY(-1px); }
+        .modal-footer {
+            text-align: center; margin-top: 16px;
+            font-size: 13px; color: #6b7280;
+        }
+        .modal-footer a {
+            color: #84cc16; font-weight: 600; cursor: pointer; text-decoration: none;
+        }
+        .modal-footer a:hover { text-decoration: underline; }
+        .modal-cancel {
+            display: block; text-align: center;
+            margin-top: 10px; font-size: 12px; color: #9ca3af;
+            cursor: pointer;
+        }
+        .modal-cancel:hover { color: #6b7280; }
+        .modal-error {
+            background: #fef2f2; border: 1px solid #fecaca;
+            color: #dc2626; font-size: 12px; border-radius: 6px;
+            padding: 8px 12px; margin-bottom: 12px; display: none;
         }
     </style>
 </head>
-<body class="overflow-hidden">
-    <!-- Login Modal -->
-    <div id="loginOverlay" class="login-overlay hidden">
-        <div class="login-modal">
-            <h2 style="text-align: center; font-size: 24px; font-weight: 900; color: #000; margin-bottom: 25px;">SIGN IN</h2>
-            <input type="text" id="username" class="login-input" placeholder="Username">
-            <input type="password" id="password" class="login-input" placeholder="Password">
-            <button onclick="handleLogin()" class="modern-btn text-white w-full" style="height: 45px; font-size: 14px; margin-top: 10px; background: #84cc16; border: none;">
-                Sign In
-            </button>
-            <p style="text-align: center; margin-top: 15px; color: #000; font-size: 13px; font-weight: 600;">
-                Don't have an account? 
-                <span style="color: #84cc16; cursor: pointer; text-decoration: underline;" onclick="showRegister()">Create Account</span>
-            </p>
-            <p style="text-align: center; margin-top: 10px; color: #000; font-size: 12px; cursor: pointer;" onclick="hideLogin()">Cancel</p>
+<body>
+
+<!-- Sign In Modal -->
+<div id="loginOverlay" class="modal-overlay hidden">
+    <div class="modal-box">
+        <button class="modal-close" onclick="hideLogin()">×</button>
+        <div class="modal-title">Welcome back</div>
+        <div class="modal-subtitle">Sign in to access your saved designs</div>
+        <div id="loginError" class="modal-error"></div>
+        <input type="text" id="username" class="modal-input" placeholder="Username" autocomplete="username">
+        <input type="password" id="password" class="modal-input" placeholder="Password" autocomplete="current-password">
+        <button onclick="handleLogin()" class="modal-btn">Sign In</button>
+        <div class="modal-footer">
+            No account? <a onclick="showRegister()">Create one</a>
         </div>
+        <span class="modal-cancel" onclick="hideLogin()">Cancel</span>
     </div>
+</div>
 
-    <!-- Register Modal -->
-    <div id="registerOverlay" class="login-overlay hidden">
-        <div class="login-modal">
-            <h2 style="text-align: center; font-size: 24px; font-weight: 900; color: #000; margin-bottom: 25px;">CREATE ACCOUNT</h2>
-            <input type="text" id="regUsername" class="login-input" placeholder="Choose Username">
-            <input type="password" id="regPassword" class="login-input" placeholder="Choose Password">
-            <input type="password" id="regConfirmPassword" class="login-input" placeholder="Confirm Password">
-            <button onclick="handleRegister()" class="modern-btn text-white w-full" style="height: 45px; font-size: 14px; margin-top: 10px; background: #84cc16; border: none;">
-                Create Account
-            </button>
-            <p style="text-align: center; margin-top: 15px; color: #000; font-size: 13px; font-weight: 600;">
-                Already have an account? 
-                <span style="color: #84cc16; cursor: pointer; text-decoration: underline;" onclick="showLogin()">Sign In</span>
-            </p>
-            <p style="text-align: center; margin-top: 10px; color: #000; font-size: 12px; cursor: pointer;" onclick="hideRegister()">Cancel</p>
+<!-- Register Modal -->
+<div id="registerOverlay" class="modal-overlay hidden">
+    <div class="modal-box">
+        <button class="modal-close" onclick="hideRegister()">×</button>
+        <div class="modal-title">Create account</div>
+        <div class="modal-subtitle">Start designing and save your work</div>
+        <div id="registerError" class="modal-error"></div>
+        <input type="text" id="regUsername" class="modal-input" placeholder="Username" autocomplete="username">
+        <input type="password" id="regPassword" class="modal-input" placeholder="Password" autocomplete="new-password">
+        <input type="password" id="regConfirmPassword" class="modal-input" placeholder="Confirm password" autocomplete="new-password">
+        <button onclick="handleRegister()" class="modal-btn">Create Account</button>
+        <div class="modal-footer">
+            Already have an account? <a onclick="showLogin()">Sign in</a>
         </div>
+        <span class="modal-cancel" onclick="hideRegister()">Cancel</span>
     </div>
+</div>
 
-    <!-- Navigation -->
-    <nav class="absolute top-0 left-0 right-0 z-20" style="height: 50px; padding: 0 20px;">
-        <div class="flex justify-between items-center h-full">
-            <!-- Logo/Brand -->
-            <div class="text-white font-semibold text-base" style="letter-spacing: 0.5px;">Virtual Designer</div>
-            
-            <!-- Sign In Button -->
-            <button onclick="showLogin()" class="px-4 py-2 rounded-full text-sm font-semibold transition-all hover:opacity-90" style="border: 1.5px solid rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.15); color: #ffffff; backdrop-filter: blur(10px); cursor: pointer;">
-                Sign In
-            </button>
-        </div>
-    </nav>
+<!-- Nav -->
+<nav class="nav-bar">
+    <div class="nav-logo">Interior<span>.</span>Designer</div>
+    <button onclick="showLogin()" class="nav-signin">Sign In</button>
+</nav>
 
-    <!-- Hero Section -->
-    <div class="relative h-screen w-full overflow-hidden">
-        <!-- Background Image -->
-        <div class="absolute inset-0 w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000');"></div>
-        
-        <!-- Dark Overlay -->
-        <div class="absolute inset-0 hero-overlay"></div>
-        
-        <!-- Content -->
-        <div class="relative z-10 flex flex-col items-center justify-center h-full px-4" style="padding-bottom: 100px;">
-            <!-- Main Heading -->
-            <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-white text-center mb-6 animate-fade-in-up tracking-tight">
-                DESIGN ANY SPACE<br>IN 3D
-            </h1>
-            
-            <!-- Sub Text -->
-            <p class="text-lg md:text-xl text-center mb-10 max-w-2xl animate-fade-in-up delay-1 font-light" style="line-height: 1.8; color: #f1f5f9; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">
-                Design homes, offices, restaurants, cafes and more — with room-specific furniture, realistic 3D views and walk-through mode.
-            </p>
-            
-            <!-- Start Button -->
-            <div class="animate-fade-in-up delay-2">
-                <a href="/editor" class="start-button text-white text-lg font-bold px-12 py-4 rounded-full uppercase tracking-wider inline-block">
-                    START DESIGNING
-                </a>
-            </div>
-        </div>
-        
-        <!-- Bottom: 4 room category cards -->
-        <div class="absolute bottom-4 left-0 right-0 z-10">
-            <div class="max-w-4xl mx-auto px-4">
-                <div class="grid grid-cols-4 gap-4 animate-fade-in-up delay-3">
-                    <a href="/editor" class="text-center group" style="text-decoration:none;">
-                        <div style="background:rgba(255,255,255,0.12); backdrop-filter:blur(10px); border:1.5px solid rgba(255,255,255,0.2); border-radius:12px; padding:14px 10px; transition:all 0.3s ease;" onmouseover="this.style.background='rgba(132,204,22,0.25)';this.style.borderColor='#84cc16';" onmouseout="this.style.background='rgba(255,255,255,0.12)';this.style.borderColor='rgba(255,255,255,0.2)';">
-                            <div style="font-size:28px; margin-bottom:6px;">🏠</div>
-                            <div style="color:#fff; font-weight:700; font-size:12px; letter-spacing:0.5px;">HOME</div>
-                            <div style="color:#cbd5e1; font-size:10px; margin-top:3px;">Bedroom · Living · Kitchen</div>
-                        </div>
-                    </a>
-                    <a href="/editor" class="text-center group" style="text-decoration:none;">
-                        <div style="background:rgba(255,255,255,0.12); backdrop-filter:blur(10px); border:1.5px solid rgba(255,255,255,0.2); border-radius:12px; padding:14px 10px; transition:all 0.3s ease;" onmouseover="this.style.background='rgba(132,204,22,0.25)';this.style.borderColor='#84cc16';" onmouseout="this.style.background='rgba(255,255,255,0.12)';this.style.borderColor='rgba(255,255,255,0.2)';">
-                            <div style="font-size:28px; margin-bottom:6px;">🏢</div>
-                            <div style="color:#fff; font-weight:700; font-size:12px; letter-spacing:0.5px;">OFFICE</div>
-                            <div style="color:#cbd5e1; font-size:10px; margin-top:3px;">Workstation · Conference</div>
-                        </div>
-                    </a>
-                    <a href="/editor" class="text-center group" style="text-decoration:none;">
-                        <div style="background:rgba(255,255,255,0.12); backdrop-filter:blur(10px); border:1.5px solid rgba(255,255,255,0.2); border-radius:12px; padding:14px 10px; transition:all 0.3s ease;" onmouseover="this.style.background='rgba(132,204,22,0.25)';this.style.borderColor='#84cc16';" onmouseout="this.style.background='rgba(255,255,255,0.12)';this.style.borderColor='rgba(255,255,255,0.2)';">
-                            <div style="font-size:28px; margin-bottom:6px;">🏪</div>
-                            <div style="color:#fff; font-weight:700; font-size:12px; letter-spacing:0.5px;">COMMERCIAL</div>
-                            <div style="color:#cbd5e1; font-size:10px; margin-top:3px;">Restaurant · Cafe · Shop</div>
-                        </div>
-                    </a>
-                    <a href="/editor" class="text-center group" style="text-decoration:none;">
-                        <div style="background:rgba(255,255,255,0.12); backdrop-filter:blur(10px); border:1.5px solid rgba(255,255,255,0.2); border-radius:12px; padding:14px 10px; transition:all 0.3s ease;" onmouseover="this.style.background='rgba(132,204,22,0.25)';this.style.borderColor='#84cc16';" onmouseout="this.style.background='rgba(255,255,255,0.12)';this.style.borderColor='rgba(255,255,255,0.2)';">
-                            <div style="font-size:28px; margin-bottom:6px;">🏫</div>
-                            <div style="color:#fff; font-weight:700; font-size:12px; letter-spacing:0.5px;">OTHER</div>
-                            <div style="color:#cbd5e1; font-size:10px; margin-top:3px;">Classroom · Gym · Library</div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
+<!-- Hero Background -->
+<div class="hero-bg"></div>
+<div class="hero-overlay"></div>
+
+<!-- Hero Content -->
+<div class="hero-content">
+    <div class="hero-tag">3D Interior Design Tool</div>
+    <h1 class="hero-title">Design Any Space<br><span>in 3D</span></h1>
+    <p class="hero-sub">Design homes, offices, restaurants, cafes and more — with room-specific furniture, realistic 3D views and walk-through mode.</p>
+    <a href="/editor" class="hero-cta">Start Designing</a>
+</div>
+
+<!-- Bottom Cards -->
+<div class="cards-row">
+    <div class="cards-grid">
+        <a href="/editor" class="card">
+            <svg class="card-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 28V14L16 4L28 14V28H20V20H12V28H4Z" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+            </svg>
+            <div class="card-title">Home</div>
+            <div class="card-sub">Bedroom · Living · Kitchen</div>
+        </a>
+        <a href="/editor" class="card">
+            <svg class="card-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="4" width="24" height="24" rx="2" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                <rect x="9" y="9" width="6" height="6" rx="1" fill="rgba(0,0,0,0.25)"/>
+                <rect x="17" y="9" width="6" height="6" rx="1" fill="rgba(0,0,0,0.25)"/>
+                <rect x="9" y="17" width="6" height="6" rx="1" fill="rgba(0,0,0,0.25)"/>
+                <rect x="17" y="17" width="6" height="6" rx="1" fill="rgba(0,0,0,0.25)"/>
+            </svg>
+            <div class="card-title">Office</div>
+            <div class="card-sub">Workstation · Conference</div>
+        </a>
+        <a href="/editor" class="card">
+            <svg class="card-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 10H28V26C28 27.1 27.1 28 26 28H6C4.9 28 4 27.1 4 26V10Z" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                <path d="M2 10H30" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M12 10V6C12 4.9 12.9 4 14 4H18C19.1 4 20 4.9 20 6V10" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+            </svg>
+            <div class="card-title">Commercial</div>
+            <div class="card-sub">Restaurant · Cafe · Shop</div>
+        </a>
+        <a href="/editor" class="card">
+            <svg class="card-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="6" width="24" height="20" rx="2" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+                <line x1="4" y1="12" x2="28" y2="12" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>
+                <line x1="12" y1="12" x2="12" y2="26" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>
+            </svg>
+            <div class="card-title">Other</div>
+            <div class="card-sub">Classroom · Gym · Library</div>
+        </a>
     </div>
-    
-    <script>
-        function showLogin() {
-            document.getElementById('loginOverlay').classList.remove('hidden');
-            document.getElementById('registerOverlay').classList.add('hidden');
-        }
+</div>
 
-        function hideLogin() {
-            document.getElementById('loginOverlay').classList.add('hidden');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-        }
+<script>
+    function showError(id, msg) {
+        const el = document.getElementById(id);
+        el.textContent = msg; el.style.display = 'block';
+    }
+    function clearError(id) {
+        const el = document.getElementById(id);
+        el.textContent = ''; el.style.display = 'none';
+    }
 
-        function showRegister() {
-            document.getElementById('registerOverlay').classList.remove('hidden');
-            document.getElementById('loginOverlay').classList.add('hidden');
-        }
+    function showLogin() {
+        document.getElementById('loginOverlay').classList.remove('hidden');
+        document.getElementById('registerOverlay').classList.add('hidden');
+        clearError('loginError');
+    }
+    function hideLogin() {
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        clearError('loginError');
+    }
+    function showRegister() {
+        document.getElementById('registerOverlay').classList.remove('hidden');
+        document.getElementById('loginOverlay').classList.add('hidden');
+        clearError('registerError');
+    }
+    function hideRegister() {
+        document.getElementById('registerOverlay').classList.add('hidden');
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regPassword').value = '';
+        document.getElementById('regConfirmPassword').value = '';
+        clearError('registerError');
+    }
 
-        function hideRegister() {
-            document.getElementById('registerOverlay').classList.add('hidden');
-            document.getElementById('regUsername').value = '';
-            document.getElementById('regPassword').value = '';
-            document.getElementById('regConfirmPassword').value = '';
-        }
+    async function handleRegister() {
+        clearError('registerError');
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const confirmPassword = document.getElementById('regConfirmPassword').value;
 
-        async function handleRegister() {
-            const username = document.getElementById('regUsername').value.trim();
-            const password = document.getElementById('regPassword').value;
-            const confirmPassword = document.getElementById('regConfirmPassword').value;
-            
-            if (!username || !password || !confirmPassword) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            if (username.length < 3) {
-                alert('Username must be at least 3 characters long');
-                return;
-            }
-            
-            const usernameRegex = /^[a-zA-Z0-9_]+$/;
-            if (!usernameRegex.test(username)) {
-                alert('Username can only contain letters, numbers, and underscores');
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                alert('Passwords do not match!');
-                return;
-            }
-            
-            if (password.length < 6) {
-                alert('Password must be at least 6 characters long');
-                return;
-            }
-            
-            const hasLetter = /[a-zA-Z]/.test(password);
-            const hasNumber = /[0-9]/.test(password);
-            
-            if (!hasLetter || !hasNumber) {
-                alert('Password must contain at least one letter and one number');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('Account created successfully! You can now login.');
-                    hideRegister();
-                    showLogin();
-                } else {
-                    alert(data.message || 'Registration failed.');
-                }
-            } catch (error) {
-                alert('Registration error: ' + error.message);
-            }
-        }
+        if (!username || !password || !confirmPassword) { showError('registerError','Please fill in all fields'); return; }
+        if (password !== confirmPassword) { showError('registerError','Passwords do not match'); return; }
 
-        async function handleLogin() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (!username || !password) {
-                alert('Please enter both username and password');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Redirect to editor after successful login with smooth transition
-                    document.body.classList.add('page-transition');
-                    setTimeout(() => {
-                        window.location.href = '/editor';
-                    }, 300);
-                } else {
-                    alert(data.message || 'Login failed. Please check your credentials.');
-                }
-            } catch (error) {
-                alert('Login error: ' + error.message);
-            }
-        }
-        
-        // Allow Enter key to submit
-        document.addEventListener('DOMContentLoaded', () => {
-            const passwordInput = document.getElementById('password');
-            if (passwordInput) {
-                passwordInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        handleLogin();
-                    }
-                });
-            }
-            
-            const regConfirmPassword = document.getElementById('regConfirmPassword');
-            if (regConfirmPassword) {
-                regConfirmPassword.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        handleRegister();
-                    }
-                });
-            }
-        });
-    </script>
+        try {
+            const res  = await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, password }) });
+            const data = await res.json();
+            if (data.success) { hideRegister(); showLogin(); }
+            else { showError('registerError', data.message || 'Registration failed'); }
+        } catch(e) { showError('registerError','Network error. Please try again.'); }
+    }
+
+    async function handleLogin() {
+        clearError('loginError');
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) { showError('loginError','Please enter username and password'); return; }
+
+        try {
+            const res  = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, password }) });
+            const data = await res.json();
+            if (data.success) {
+                document.body.classList.add('page-transition');
+                setTimeout(() => { window.location.href = '/editor'; }, 300);
+            } else { showError('loginError', data.message || 'Invalid credentials'); }
+        } catch(e) { showError('loginError','Network error. Please try again.'); }
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('loginOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) hideLogin(); });
+    document.getElementById('registerOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) hideRegister(); });
+
+    // Enter key support
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('password').addEventListener('keypress', e => { if(e.key==='Enter') handleLogin(); });
+        document.getElementById('regConfirmPassword').addEventListener('keypress', e => { if(e.key==='Enter') handleRegister(); });
+    });
+</script>
 </body>
 </html>

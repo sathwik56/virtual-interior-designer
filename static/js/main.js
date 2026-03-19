@@ -35,6 +35,9 @@ window.loadDesign = loadDesign;
 window.deleteSelected = deleteSelected;
 window.updateRoomSize = updateRoomSize;
 window.manageDesigns = manageDesigns;
+window.closeDesignsModal = closeDesignsModal;
+window.loadDesignById = loadDesignById;
+window.deleteDesignById = deleteDesignById;
 window.undoAction = undoAction;
 window.redoAction = redoAction;
 window.resetCamera = resetCamera;
@@ -1868,113 +1871,100 @@ async function loadDesign() {
 }
 
 async function manageDesigns() {
-    // Check if user is logged in
     if (!window.currentUser) {
         const signIn = confirm('You need to sign in to manage your saved designs. Would you like to go to the sign in page?');
         if (signIn) {
             document.body.classList.add('page-transition');
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 300);
+            setTimeout(() => { window.location.href = '/'; }, 300);
         }
         return;
     }
-    
+
     try {
-        // Get list of user's designs
         const response = await fetch("/designs");
         const result = await response.json();
-        
-        if (!result.success || result.designs.length === 0) {
-            alert("You don't have any saved designs yet.");
-            return;
-        }
-        
-        // Create a formatted list of designs
-        let message = "YOUR SAVED DESIGNS:\n\n";
-        result.designs.forEach((design, index) => {
-            message += `${index + 1}. ${design.name}\n`;
-            message += `   Items: ${design.furniture_count} | Updated: ${design.updated_at}\n\n`;
-        });
-        message += "\nOptions:\n";
-        message += "• Enter number to LOAD a design\n";
-        message += "• Enter number with 'D' to DELETE (e.g., '2D' to delete design 2)\n";
-        message += "• Press Cancel to close\n";
-        
-        const input = prompt(message);
-        
-        if (!input) {
-            return; // User cancelled
-        }
-        
-        // Check if user wants to delete (ends with 'D' or 'd')
-        if (input.toUpperCase().endsWith('D')) {
-            const designIndex = parseInt(input.slice(0, -1)) - 1;
-            
-            if (designIndex < 0 || designIndex >= result.designs.length) {
-                alert("Invalid design number");
-                return;
-            }
-            
-            const designToDelete = result.designs[designIndex];
-            
-            // Confirm deletion
-            if (!confirm(`Are you sure you want to delete "${designToDelete.name}"?\n\nThis action cannot be undone.`)) {
-                return;
-            }
-            
-            // Delete the design
-            const deleteResponse = await fetch(`/delete_design/${designToDelete.id}`, {
-                method: 'DELETE'
-            });
-            
-            const deleteResult = await deleteResponse.json();
-            
-            if (deleteResult.success) {
-                alert(`Design "${designToDelete.name}" deleted successfully!`);
-            } else {
-                alert("Failed to delete design: " + deleteResult.message);
-            }
-        } else {
-            // Load design
-            const designIndex = parseInt(input) - 1;
-            
-            if (designIndex < 0 || designIndex >= result.designs.length) {
-                alert("Invalid design number");
-                return;
-            }
-            
-            const selectedDesign = result.designs[designIndex];
-            
-            // Load the selected design
-            const loadResponse = await fetch(`/load?design_id=${selectedDesign.id}`);
-            const loadResult = await loadResponse.json();
-            
-            if (!loadResult.success) {
-                alert("Failed to load design: " + loadResult.message);
-                return;
-            }
-            
-            // Clear current furniture
-            furnitureList.forEach(obj => scene.remove(obj));
-            furnitureList = [];
-            
-            // Add loaded furniture
-            loadResult.furniture.forEach(item => {
-                const obj = createFurniture(item.type);
-                obj.position.set(item.x, item.y, item.z);
-                obj.rotation.y = item.rotation || 0;
-                if (item.scale) obj.scale.setScalar(item.scale);
-            });
 
-            // Restore room state
-            if (loadResult.room) applyRoomState(loadResult.room);
-            
-            alert(`Design "${loadResult.design_name}" loaded successfully!`);
+        const modal = document.getElementById('designsModal');
+        const list  = document.getElementById('designsList');
+        const sub   = document.getElementById('designsSubtitle');
+
+        if (!result.success || result.designs.length === 0) {
+            list.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#6b7280;font-size:14px;">No saved designs yet.</div>`;
+            sub.textContent = '';
+        } else {
+            sub.textContent = `${result.designs.length} design${result.designs.length > 1 ? 's' : ''}`;
+            list.innerHTML = result.designs.map((d, i) => `
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:8px;border:1px solid #e5e7eb;margin-bottom:8px;background:#fafafa;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.name}</div>
+                        <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${d.furniture_count} items &nbsp;·&nbsp; ${d.updated_at}</div>
+                    </div>
+                    <button onclick="loadDesignById(${d.id},'${d.name.replace(/'/g,"\\'")}',this)"
+                        style="background:#84cc16;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">
+                        Load
+                    </button>
+                    <button onclick="deleteDesignById(${d.id},'${d.name.replace(/'/g,"\\'")}',this)"
+                        style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;">
+                        ✕
+                    </button>
+                </div>
+            `).join('');
         }
+
+        modal.style.display = 'flex';
     } catch (error) {
-        alert("Error managing designs: " + error.message);
+        alert("Error loading designs: " + error.message);
     }
+}
+
+function closeDesignsModal() {
+    document.getElementById('designsModal').style.display = 'none';
+}
+
+async function loadDesignById(id, name, btn) {
+    try {
+        btn.textContent = '...';
+        btn.disabled = true;
+        const res  = await fetch(`/load?design_id=${id}`);
+        const data = await res.json();
+        if (!data.success) { alert("Failed to load: " + data.message); btn.textContent='Load'; btn.disabled=false; return; }
+
+        furnitureList.forEach(obj => scene.remove(obj));
+        furnitureList = [];
+        data.furniture.forEach(item => {
+            const obj = createFurniture(item.type);
+            obj.position.set(item.x, item.y, item.z);
+            obj.rotation.y = item.rotation || 0;
+            if (item.scale) obj.scale.setScalar(item.scale);
+        });
+        if (data.room) applyRoomState(data.room);
+
+        closeDesignsModal();
+        // small toast
+        const t = document.createElement('div');
+        t.textContent = `"${data.design_name}" loaded`;
+        Object.assign(t.style, {position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',background:'#111',color:'#fff',padding:'10px 20px',borderRadius:'8px',fontSize:'13px',zIndex:'99999',opacity:'1',transition:'opacity 0.4s'});
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 2000);
+    } catch(e) { alert("Error: " + e.message); }
+}
+
+async function deleteDesignById(id, name, btn) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    try {
+        const res  = await fetch(`/delete_design/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            // remove the row
+            btn.closest('div[style]').remove();
+            // update subtitle count
+            const remaining = document.querySelectorAll('#designsList > div').length;
+            document.getElementById('designsSubtitle').textContent = remaining ? `${remaining} design${remaining>1?'s':''}` : '';
+            if (!remaining) document.getElementById('designsList').innerHTML = `<div style="text-align:center;padding:40px 20px;color:#6b7280;font-size:14px;">No saved designs yet.</div>`;
+        } else {
+            alert("Delete failed: " + data.message);
+        }
+    } catch(e) { alert("Error: " + e.message); }
 }
 
 
