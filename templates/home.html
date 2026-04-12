@@ -3,391 +3,744 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Interior Designer - Design Any Space in 3D</title>
+    <title>Interior Designer — 3D Room Design Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
-
-        body {
-            margin: 0; overflow: hidden;
-            animation: fadeIn 0.5s ease-in;
+        :root {
+            --cream: #f5f0e8;
+            --warm-white: #faf8f4;
+            --charcoal: #141210;
+            --charcoal2: #1e1b18;
+            --gold: #c9a96e;
+            --gold-light: #e8d5b0;
+            --muted: #8a8070;
+            --border: rgba(201,169,110,0.18);
         }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-        .page-transition { animation: fadeOut 0.3s ease-out forwards; }
-        @keyframes fadeOut { from { opacity:1; } to { opacity:0; } }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: var(--charcoal); color: var(--warm-white); overflow-x: hidden; }
 
         /* ── NAV ── */
-        .nav-bar {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-            height: 60px;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 32px;
-            background: rgba(0,0,0,0.35);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            height: 68px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 60px;
+            transition: background 0.4s, border-color 0.4s;
         }
-        .nav-logo {
-            font-size: 15px; font-weight: 700; color: #fff;
+        .nav.scrolled {
+            background: rgba(14,12,10,0.92);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-logo-icon {
+            width: 30px; height: 30px; border: 1.5px solid var(--gold);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .nav-logo-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+            letter-spacing: 3px; text-transform: uppercase;
+        }
+        .nav-right { display: flex; align-items: center; gap: 36px; }
+        .nav-link {
+            font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.45);
+            letter-spacing: 1.5px; text-transform: uppercase; text-decoration: none;
+            transition: color 0.2s;
+        }
+        .nav-link:hover { color: var(--gold); }
+        .nav-btn {
+            height: 36px; padding: 0 22px;
+            border: 1px solid rgba(201,169,110,0.45); background: transparent;
+            color: var(--gold); font-size: 11px; font-weight: 600;
             letter-spacing: 1.5px; text-transform: uppercase;
+            cursor: pointer; transition: all 0.25s; font-family: 'Inter', sans-serif;
         }
-        .nav-logo span { color: #84cc16; }
-        .nav-signin {
-            height: 36px; padding: 0 20px;
-            border-radius: 8px;
-            border: 1.5px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.1);
-            color: #fff; font-size: 13px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .nav-signin:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.5); }
+        .nav-btn:hover { background: var(--gold); color: var(--charcoal); }
 
         /* ── HERO ── */
+        .hero {
+            position: relative; height: 100vh; min-height: 700px;
+            display: flex; align-items: center;
+            overflow: hidden;
+        }
         .hero-bg {
-            position: fixed; inset: 0;
-            background-image: url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000');
-            background-size: cover; background-position: center;
+            position: absolute; inset: 0;
+            background-image: url('https://images.unsplash.com/photo-1600210492493-0946911123ea?q=85&w=2400');
+            background-size: cover; background-position: center 30%;
         }
         .hero-overlay {
-            position: fixed; inset: 0;
-            background: linear-gradient(160deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.65) 100%);
+            position: absolute; inset: 0;
+            background: linear-gradient(105deg, rgba(14,12,10,0.90) 0%, rgba(14,12,10,0.60) 55%, rgba(14,12,10,0.35) 100%);
         }
-
-        /* ── HERO CONTENT ── */
         .hero-content {
-            position: fixed; inset: 0;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            padding-bottom: 130px;
-            text-align: center;
+            position: relative; z-index: 2;
+            padding: 0 60px; max-width: 700px;
         }
-        .hero-tag {
-            display: inline-block;
-            background: rgba(132,204,22,0.18);
-            border: 1px solid rgba(132,204,22,0.45);
-            color: #a3e635; font-size: 11px; font-weight: 700;
-            letter-spacing: 2px; text-transform: uppercase;
-            padding: 5px 16px; border-radius: 20px;
-            margin-bottom: 22px;
-            animation: fadeUp 0.7s ease-out both;
+        .eyebrow {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+            opacity: 0; animation: slideRight 0.8s 0.2s ease-out forwards;
         }
+        .eyebrow-line { width: 32px; height: 1px; background: var(--gold); }
+        .eyebrow-text { font-size: 11px; font-weight: 500; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; }
         .hero-title {
-            font-size: clamp(36px, 6vw, 72px);
-            font-weight: 900; color: #fff;
-            line-height: 1.08; letter-spacing: -1px;
-            margin: 0 0 20px;
-            animation: fadeUp 0.7s 0.15s ease-out both;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(52px, 6.5vw, 90px);
+            font-weight: 600; line-height: 1.0; letter-spacing: -1px;
+            margin-bottom: 24px;
+            opacity: 0; animation: slideRight 0.8s 0.35s ease-out forwards;
         }
-        .hero-title span { color: #84cc16; }
-        .hero-sub {
-            font-size: clamp(14px, 1.5vw, 17px);
-            color: #cbd5e1; font-weight: 400; line-height: 1.7;
-            max-width: 560px; margin: 0 0 36px;
-            animation: fadeUp 0.7s 0.3s ease-out both;
+        .hero-title em { font-style: italic; color: var(--gold); }
+        .hero-desc {
+            font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.52);
+            line-height: 1.85; max-width: 460px; margin-bottom: 44px;
+            opacity: 0; animation: slideRight 0.8s 0.5s ease-out forwards;
         }
-        .hero-cta {
-            display: inline-block;
-            background: #84cc16; color: #fff;
-            font-size: 14px; font-weight: 700;
-            letter-spacing: 1px; text-transform: uppercase;
-            padding: 14px 40px; border-radius: 8px;
-            text-decoration: none;
-            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 24px rgba(132,204,22,0.35);
-            animation: fadeUp 0.7s 0.45s ease-out both;
+        .hero-actions {
+            display: flex; align-items: center; gap: 28px;
+            opacity: 0; animation: slideRight 0.8s 0.65s ease-out forwards;
         }
-        .hero-cta:hover {
-            background: #65a30d;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(132,204,22,0.45);
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: var(--gold); color: var(--charcoal);
+            font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+            padding: 16px 36px; text-decoration: none; transition: all 0.25s;
         }
+        .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(201,169,110,0.3); }
+        .btn-primary svg { transition: transform 0.2s; }
+        .btn-primary:hover svg { transform: translateX(4px); }
+        .btn-ghost {
+            font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.45);
+            letter-spacing: 1px; text-decoration: none;
+            border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 2px;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .btn-ghost:hover { color: var(--warm-white); border-color: rgba(255,255,255,0.5); }
+        .hero-stats {
+            position: absolute; bottom: 60px; left: 60px; z-index: 2;
+            display: flex; gap: 48px;
+            opacity: 0; animation: fadeUp 0.8s 0.8s ease-out forwards;
+        }
+        .stat-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 34px; font-weight: 600; color: var(--warm-white); line-height: 1;
+        }
+        .stat-label { font-size: 10px; font-weight: 500; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+        .stat-divider { width: 1px; background: rgba(255,255,255,0.1); align-self: stretch; }
+        .scroll-hint {
+            position: absolute; bottom: 60px; right: 60px; z-index: 2;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            opacity: 0; animation: fadeUp 0.8s 1s ease-out forwards;
+        }
+        .scroll-hint span { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+        .scroll-line {
+            width: 1px; height: 48px; background: linear-gradient(to bottom, var(--gold), transparent);
+            animation: scrollPulse 2s infinite;
+        }
+        @keyframes scrollPulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
 
-        @keyframes fadeUp {
-            from { opacity:0; transform:translateY(20px); }
-            to   { opacity:1; transform:translateY(0); }
+        /* ── FEATURES ── */
+        .section { padding: 120px 60px; }
+        .section-dark { background: var(--charcoal2); }
+        .section-light { background: var(--cream); }
+        .section-label {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
         }
+        .section-label-line { width: 24px; height: 1px; background: var(--gold); }
+        .section-label-text { font-size: 10px; font-weight: 600; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; }
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(36px, 4vw, 56px); font-weight: 600; line-height: 1.1;
+            margin-bottom: 16px;
+        }
+        .section-title.dark { color: var(--charcoal); }
+        .section-sub { font-size: 15px; font-weight: 300; color: var(--muted); line-height: 1.8; max-width: 500px; }
+        .section-sub.dark { color: #6b6050; }
 
-        /* ── BOTTOM CARDS ── */
-        .cards-row {
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
-            padding: 0 24px 20px;
+        .features-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+            margin-top: 72px; background: var(--border);
         }
-        .cards-grid {
-            max-width: 860px; margin: 0 auto;
-            display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
-            animation: fadeUp 0.7s 0.6s ease-out both;
+        .feature-card {
+            background: var(--charcoal2); padding: 48px 40px;
+            transition: background 0.3s;
         }
-        .card {
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.14);
-            border-radius: 10px; padding: 14px 12px;
-            text-align: center; text-decoration: none;
-            transition: background 0.2s, border-color 0.2s, transform 0.2s;
-            cursor: pointer;
+        .feature-card:hover { background: #252118; }
+        .feature-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 48px; font-weight: 400; color: rgba(201,169,110,0.2);
+            line-height: 1; margin-bottom: 24px;
         }
-        .card:hover {
-            background: rgba(132,204,22,0.15);
-            border-color: rgba(132,204,22,0.5);
-            transform: translateY(-2px);
-        }
-        .card-icon {
-            width: 32px; height: 32px; margin: 0 auto 8px;
-            opacity: 0.85;
-        }
-        .card-title {
-            color: #fff; font-size: 11px; font-weight: 700;
-            letter-spacing: 1px; text-transform: uppercase;
-        }
-        .card-sub {
-            color: #94a3b8; font-size: 10px; margin-top: 4px; line-height: 1.4;
-        }
+        .feature-title { font-size: 16px; font-weight: 600; color: var(--warm-white); margin-bottom: 12px; }
+        .feature-desc { font-size: 13px; font-weight: 300; color: var(--muted); line-height: 1.8; }
 
-        /* ── MODAL OVERLAY ── */
+        /* ── HOW IT WORKS ── */
+        .steps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 60px; margin-top: 72px; }
+        .step { position: relative; }
+        .step-connector {
+            position: absolute; top: 20px; left: calc(100% + 10px);
+            width: calc(100% - 20px); height: 1px;
+            background: linear-gradient(to right, var(--gold), transparent);
+        }
+        .step:last-child .step-connector { display: none; }
+        .step-num {
+            width: 40px; height: 40px; border: 1px solid var(--gold);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px; font-weight: 600; color: var(--gold);
+            margin-bottom: 24px;
+        }
+        .step-title { font-size: 16px; font-weight: 600; color: var(--charcoal); margin-bottom: 10px; }
+        .step-desc { font-size: 13px; font-weight: 300; color: #6b6050; line-height: 1.8; }
+
+        /* ── ROOM TYPES ── */
+        .rooms-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; margin-top: 72px; }
+        .room-card {
+            position: relative; aspect-ratio: 3/4; overflow: hidden;
+            cursor: pointer; text-decoration: none;
+        }
+        .room-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+        .room-card:hover img { transform: scale(1.06); }
+        .room-card-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(14,12,10,0.85) 0%, rgba(14,12,10,0.1) 60%);
+            transition: background 0.3s;
+        }
+        .room-card:hover .room-card-overlay { background: linear-gradient(to top, rgba(14,12,10,0.9) 0%, rgba(14,12,10,0.3) 60%); }
+        .room-card-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 24px 20px; }
+        .room-card-title { font-size: 15px; font-weight: 600; color: var(--warm-white); margin-bottom: 4px; }
+        .room-card-sub { font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 0.5px; }
+        .room-card-arrow {
+            position: absolute; top: 20px; right: 20px;
+            width: 32px; height: 32px; border: 1px solid rgba(201,169,110,0.4);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transform: translateY(-4px); transition: all 0.3s;
+        }
+        .room-card:hover .room-card-arrow { opacity: 1; transform: translateY(0); }
+
+        /* ── SHOWCASE ── */
+        .showcase { padding: 120px 60px; background: var(--charcoal); }
+        .showcase-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+        .showcase-img {
+            position: relative; aspect-ratio: 4/3; overflow: hidden;
+        }
+        .showcase-img img { width: 100%; height: 100%; object-fit: cover; }
+        .showcase-img-badge {
+            position: absolute; bottom: -20px; right: -20px;
+            background: var(--charcoal2); border: 1px solid var(--border);
+            padding: 20px 24px;
+        }
+        .badge-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px; font-weight: 600; color: var(--gold); line-height: 1;
+        }
+        .badge-text { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+        .showcase-features { display: flex; flex-direction: column; gap: 28px; margin-top: 48px; }
+        .showcase-feat { display: flex; gap: 16px; align-items: flex-start; }
+        .feat-icon {
+            width: 36px; height: 36px; border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .feat-title { font-size: 14px; font-weight: 600; color: var(--warm-white); margin-bottom: 4px; }
+        .feat-desc { font-size: 12px; font-weight: 300; color: var(--muted); line-height: 1.7; }
+
+        /* ── CTA ── */
+        .cta-section {
+            padding: 140px 60px; text-align: center;
+            background-image: url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000');
+            background-size: cover; background-position: center;
+            position: relative;
+        }
+        .cta-overlay { position: absolute; inset: 0; background: rgba(14,12,10,0.82); }
+        .cta-content { position: relative; z-index: 2; }
+        .cta-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(40px, 5vw, 72px); font-weight: 600;
+            line-height: 1.1; margin-bottom: 20px;
+        }
+        .cta-title em { font-style: italic; color: var(--gold); }
+        .cta-sub { font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.5); margin-bottom: 48px; }
+
+        /* ── FOOTER ── */
+        .footer {
+            background: #0a0806; padding: 48px 60px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .footer-logo { display: flex; align-items: center; gap: 10px; }
+        .footer-copy { font-size: 11px; color: rgba(255,255,255,0.2); letter-spacing: 0.5px; }
+        .footer-links { display: flex; gap: 28px; }
+        .footer-link { font-size: 11px; color: rgba(255,255,255,0.25); text-decoration: none; letter-spacing: 1px; text-transform: uppercase; transition: color 0.2s; }
+        .footer-link:hover { color: var(--gold); }
+
+        /* ── MODALS ── */
         .modal-overlay {
             position: fixed; inset: 0; z-index: 200;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(6px);
+            background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
             display: flex; align-items: center; justify-content: center;
         }
         .modal-overlay.hidden { display: none; }
-
-        /* ── MODAL BOX ── */
-        .modal-box {
-            background: #fff;
-            border-radius: 16px;
-            width: 380px; max-width: 95vw;
-            padding: 36px 32px 28px;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.25);
-            position: relative;
+        .modal-box { display: flex; width: 760px; max-width: 95vw; box-shadow: 0 40px 100px rgba(0,0,0,0.6); }
+        .modal-image {
+            width: 280px; flex-shrink: 0;
+            background-image: url('https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=800');
+            background-size: cover; background-position: center; position: relative;
         }
-        .modal-close {
-            position: absolute; top: 14px; right: 16px;
-            background: none; border: none;
-            font-size: 20px; color: #9ca3af; cursor: pointer; line-height: 1;
-        }
-        .modal-close:hover { color: #374151; }
-        .modal-title {
-            font-size: 20px; font-weight: 800; color: #111;
-            text-align: center; margin-bottom: 6px; letter-spacing: -0.3px;
-        }
-        .modal-subtitle {
-            font-size: 12px; color: #6b7280;
-            text-align: center; margin-bottom: 24px;
-        }
-        .modal-input {
-            width: 100%; height: 44px;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 0 14px; font-size: 14px; color: #111;
-            margin-bottom: 12px; outline: none;
-            transition: border-color 0.2s;
-        }
-        .modal-input:focus { border-color: #84cc16; box-shadow: 0 0 0 3px rgba(132,204,22,0.12); }
-        .modal-input::placeholder { color: #9ca3af; }
-        .modal-btn {
-            width: 100%; height: 44px;
-            background: #84cc16; color: #fff;
-            border: none; border-radius: 8px;
-            font-size: 14px; font-weight: 700;
-            cursor: pointer; margin-top: 4px;
-            transition: background 0.2s, transform 0.15s;
-        }
-        .modal-btn:hover { background: #65a30d; transform: translateY(-1px); }
-        .modal-footer {
-            text-align: center; margin-top: 16px;
-            font-size: 13px; color: #6b7280;
-        }
-        .modal-footer a {
-            color: #84cc16; font-weight: 600; cursor: pointer; text-decoration: none;
-        }
+        .modal-image-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,12,10,0.3) 0%, rgba(14,12,10,0.75) 100%); }
+        .modal-image-text { position: absolute; bottom: 28px; left: 24px; right: 24px; }
+        .modal-image-quote { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: var(--warm-white); line-height: 1.4; font-style: italic; }
+        .modal-form-side { flex: 1; background: var(--warm-white); padding: 40px 36px; position: relative; }
+        .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 18px; color: #aaa; cursor: pointer; transition: color 0.2s; }
+        .modal-close:hover { color: var(--charcoal); }
+        .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--charcoal); margin-bottom: 4px; }
+        .modal-subtitle { font-size: 12px; color: #9a9080; margin-bottom: 28px; }
+        .modal-error { background: #fef2f2; border-left: 3px solid #dc2626; color: #dc2626; font-size: 12px; padding: 10px 14px; margin-bottom: 16px; display: none; }
+        .modal-label { font-size: 10px; font-weight: 600; color: #9a9080; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; display: block; }
+        .modal-input { width: 100%; height: 46px; border: 1px solid #e0d8cc; background: #faf8f4; padding: 0 14px; font-size: 14px; color: var(--charcoal); margin-bottom: 16px; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif; }
+        .modal-input:focus { border-color: var(--gold); background: #fff; }
+        .modal-input::placeholder { color: #c0b8ac; }
+        .modal-btn { width: 100%; height: 48px; background: var(--charcoal); color: var(--warm-white); border: none; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 4px; transition: background 0.2s; font-family: 'Inter', sans-serif; }
+        .modal-btn:hover { background: #2d2d2d; }
+        .modal-footer { text-align: center; margin-top: 18px; font-size: 12px; color: #9a9080; }
+        .modal-footer a { color: var(--gold); font-weight: 600; cursor: pointer; text-decoration: none; }
         .modal-footer a:hover { text-decoration: underline; }
-        .modal-cancel {
-            display: block; text-align: center;
-            margin-top: 10px; font-size: 12px; color: #9ca3af;
-            cursor: pointer;
+        .modal-cancel { display: block; text-align: center; margin-top: 10px; font-size: 11px; color: #bbb; cursor: pointer; }
+        .modal-cancel:hover { color: #888; }
+
+        /* ── TOAST ── */
+        .toast-container {
+            position: fixed; top: 80px; right: 24px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 10px;
+            pointer-events: none;
         }
-        .modal-cancel:hover { color: #6b7280; }
-        .modal-error {
-            background: #fef2f2; border: 1px solid #fecaca;
-            color: #dc2626; font-size: 12px; border-radius: 6px;
-            padding: 8px 12px; margin-bottom: 12px; display: none;
+        .toast {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 18px;
+            background: #141210;
+            border: 1px solid #2e2a25;
+            border-left: 3px solid var(--gold);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            min-width: 280px; max-width: 360px;
+            pointer-events: all;
+            animation: toastIn 0.35s ease-out;
+        }
+        .toast.toast-error { border-left-color: #ef4444; }
+        .toast.toast-success { border-left-color: #c9a96e; }
+        .toast.toast-out { animation: toastOut 0.3s ease-in forwards; }
+        .toast-icon { font-size: 15px; flex-shrink: 0; }
+        .toast-body { flex: 1; }
+        .toast-title { font-size: 12px; font-weight: 600; color: #f0ece4; letter-spacing: 0.3px; }
+        .toast-msg { font-size: 11px; color: #9a9080; margin-top: 2px; line-height: 1.5; }
+        .toast-close {
+            background: none; border: none; color: #5a5248;
+            font-size: 16px; cursor: pointer; padding: 0; line-height: 1;
+            transition: color 0.2s; flex-shrink: 0;
+        }
+        .toast-close:hover { color: #f0ece4; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to   { opacity: 0; transform: translateX(20px); }
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes slideRight { from{opacity:0;transform:translateX(-24px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        @media(max-width:768px) {
+            .nav{padding:0 20px} .hero-content{padding:0 20px} .hero-stats{left:20px;gap:24px}
+            .scroll-hint{display:none} .section{padding:80px 20px}
+            .features-grid{grid-template-columns:1fr} .steps-grid{grid-template-columns:1fr;gap:40px}
+            .rooms-grid{grid-template-columns:repeat(2,1fr)} .showcase-inner{grid-template-columns:1fr;gap:40px}
+            .cta-section{padding:80px 20px} .footer{flex-direction:column;gap:20px;padding:32px 20px;text-align:center}
+            .modal-image{display:none}
         }
     </style>
 </head>
 <body>
 
-<!-- Sign In Modal -->
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- MODALS -->
 <div id="loginOverlay" class="modal-overlay hidden">
     <div class="modal-box">
-        <button class="modal-close" onclick="hideLogin()">×</button>
-        <div class="modal-title">Welcome back</div>
-        <div class="modal-subtitle">Sign in to access your saved designs</div>
-        <div id="loginError" class="modal-error"></div>
-        <input type="text" id="username" class="modal-input" placeholder="Username" autocomplete="username">
-        <input type="password" id="password" class="modal-input" placeholder="Password" autocomplete="current-password">
-        <button onclick="handleLogin()" class="modal-btn">Sign In</button>
-        <div class="modal-footer">
-            No account? <a onclick="showRegister()">Create one</a>
+        <div class="modal-image"><div class="modal-image-overlay"></div><div class="modal-image-text"><div class="modal-image-quote">"Every room tells a story. Make yours beautiful."</div></div></div>
+        <div class="modal-form-side">
+            <button class="modal-close" onclick="hideLogin()">×</button>
+            <div class="modal-title">Welcome back</div>
+            <div class="modal-subtitle">Sign in to access your saved designs</div>
+            <div id="loginError" class="modal-error"></div>
+            <label class="modal-label">Username</label>
+            <input type="text" id="username" class="modal-input" placeholder="Enter your username" autocomplete="username">
+            <label class="modal-label">Password</label>
+            <input type="password" id="password" class="modal-input" placeholder="Enter your password" autocomplete="current-password">
+            <button onclick="handleLogin()" class="modal-btn">Sign In</button>
+            <div class="modal-footer">No account? <a onclick="showRegister()">Create one free</a></div>
+            <span class="modal-cancel" onclick="hideLogin()">Cancel</span>
         </div>
-        <span class="modal-cancel" onclick="hideLogin()">Cancel</span>
     </div>
 </div>
-
-<!-- Register Modal -->
 <div id="registerOverlay" class="modal-overlay hidden">
     <div class="modal-box">
-        <button class="modal-close" onclick="hideRegister()">×</button>
-        <div class="modal-title">Create account</div>
-        <div class="modal-subtitle">Start designing and save your work</div>
-        <div id="registerError" class="modal-error"></div>
-        <input type="text" id="regUsername" class="modal-input" placeholder="Username" autocomplete="username">
-        <input type="password" id="regPassword" class="modal-input" placeholder="Password" autocomplete="new-password">
-        <input type="password" id="regConfirmPassword" class="modal-input" placeholder="Confirm password" autocomplete="new-password">
-        <button onclick="handleRegister()" class="modal-btn">Create Account</button>
-        <div class="modal-footer">
-            Already have an account? <a onclick="showLogin()">Sign in</a>
+        <div class="modal-image"><div class="modal-image-overlay"></div><div class="modal-image-text"><div class="modal-image-quote">"Design the space you've always imagined."</div></div></div>
+        <div class="modal-form-side">
+            <button class="modal-close" onclick="hideRegister()">×</button>
+            <div class="modal-title">Create account</div>
+            <div class="modal-subtitle">Start designing and save your work for free</div>
+            <div id="registerError" class="modal-error"></div>
+            <label class="modal-label">Username</label>
+            <input type="text" id="regUsername" class="modal-input" placeholder="Choose a username" autocomplete="username">
+            <label class="modal-label">Password</label>
+            <input type="password" id="regPassword" class="modal-input" placeholder="Create a password" autocomplete="new-password">
+            <label class="modal-label">Confirm Password</label>
+            <input type="password" id="regConfirmPassword" class="modal-input" placeholder="Repeat your password" autocomplete="new-password">
+            <button onclick="handleRegister()" class="modal-btn">Create Account</button>
+            <div class="modal-footer">Already have an account? <a onclick="showLogin()">Sign in</a></div>
+            <span class="modal-cancel" onclick="hideRegister()">Cancel</span>
         </div>
-        <span class="modal-cancel" onclick="hideRegister()">Cancel</span>
     </div>
 </div>
 
-<!-- Nav -->
-<nav class="nav-bar">
-    <div class="nav-logo">Interior<span>.</span>Designer</div>
-    <button onclick="showLogin()" class="nav-signin">Sign In</button>
+<!-- NAV -->
+<nav class="nav" id="navbar">
+    <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="1" y="1" width="6" height="6" stroke="rgba(201,169,110,0.9)" stroke-width="1.2"/>
+                <rect x="9" y="1" width="6" height="6" stroke="rgba(201,169,110,0.5)" stroke-width="1.2"/>
+                <rect x="1" y="9" width="6" height="6" stroke="rgba(201,169,110,0.5)" stroke-width="1.2"/>
+                <rect x="9" y="9" width="6" height="6" stroke="rgba(201,169,110,0.9)" stroke-width="1.2"/>
+            </svg>
+        </div>
+        <div class="nav-logo-text">Interior Designer</div>
+    </a>
+    <div class="nav-right">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#rooms" class="nav-link">Rooms</a>
+        <a href="#how" class="nav-link">How it works</a>
+        <button onclick="showLogin()" class="nav-btn">Sign In</button>
+    </div>
 </nav>
 
-<!-- Hero Background -->
-<div class="hero-bg"></div>
-<div class="hero-overlay"></div>
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <div class="eyebrow">
+            <div class="eyebrow-line"></div>
+            <div class="eyebrow-text">3D Interior Design Studio</div>
+        </div>
+        <h1 class="hero-title">Design Every<br>Space with <em>Intent</em></h1>
+        <p class="hero-desc">Visualise homes, offices, restaurants and more in real-time 3D. Place furniture, explore walk-through mode, and bring your vision to life.</p>
+        <div class="hero-actions">
+            <a href="/editor" class="btn-primary">
+                Start Designing
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7H13M8 2L13 7L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a onclick="showLogin()" class="btn-ghost">View saved designs</a>
+        </div>
+    </div>
+    <div class="hero-stats">
+        <div><div class="stat-num">13+</div><div class="stat-label">Room Types</div></div>
+        <div class="stat-divider"></div>
+        <div><div class="stat-num">40+</div><div class="stat-label">Furniture Items</div></div>
+        <div class="stat-divider"></div>
+        <div><div class="stat-num">360°</div><div class="stat-label">Walk-Through</div></div>
+    </div>
+    <div class="scroll-hint">
+        <span>Scroll</span>
+        <div class="scroll-line"></div>
+    </div>
+</section>
 
-<!-- Hero Content -->
-<div class="hero-content">
-    <div class="hero-tag">3D Interior Design Tool</div>
-    <h1 class="hero-title">Design Any Space<br><span>in 3D</span></h1>
-    <p class="hero-sub">Design homes, offices, restaurants, cafes and more — with room-specific furniture, realistic 3D views and walk-through mode.</p>
-    <a href="/editor" class="hero-cta">Start Designing</a>
-</div>
+<!-- FEATURES -->
+<section class="section section-dark" id="features">
+    <div class="reveal">
+        <div class="section-label"><div class="section-label-line"></div><div class="section-label-text">What you get</div></div>
+        <h2 class="section-title">Everything you need<br>to design any space</h2>
+        <p class="section-sub">A complete 3D design toolkit — no downloads, no complexity. Just open and start building.</p>
+    </div>
+    <div class="features-grid reveal">
+        <div class="feature-card">
+            <div class="feature-num">01</div>
+            <div class="feature-title">Real-Time 3D Rendering</div>
+            <div class="feature-desc">See your room come to life instantly as you place and move furniture. Switch between top-down and full 3D perspective at any time.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-num">02</div>
+            <div class="feature-title">Walk-Through Mode</div>
+            <div class="feature-desc">Step inside your design and explore it from a first-person perspective. Experience the space before it's built.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-num">03</div>
+            <div class="feature-title">40+ Furniture Items</div>
+            <div class="feature-desc">A curated library of furniture and fixtures for every room type — from sofas and beds to desks, dining sets and more.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-num">04</div>
+            <div class="feature-title">Save & Load Designs</div>
+            <div class="feature-desc">Create an account and your designs are saved automatically. Come back anytime to continue or share your work.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-num">05</div>
+            <div class="feature-title">Export as Image</div>
+            <div class="feature-desc">Capture your finished design as a high-quality image to share with clients, contractors, or on social media.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-num">06</div>
+            <div class="feature-title">13 Room Types</div>
+            <div class="feature-desc">From bedrooms and kitchens to offices, restaurants, gyms and classrooms — every space type is supported with the right furniture set.</div>
+        </div>
+    </div>
+</section>
 
-<!-- Bottom Cards -->
-<div class="cards-row">
-    <div class="cards-grid">
-        <a href="/editor" class="card">
-            <svg class="card-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 28V14L16 4L28 14V28H20V20H12V28H4Z" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-            </svg>
-            <div class="card-title">Home</div>
-            <div class="card-sub">Bedroom · Living · Kitchen</div>
+<!-- HOW IT WORKS -->
+<section class="section section-light" id="how">
+    <div class="reveal">
+        <div class="section-label"><div class="section-label-line" style="background:#c9a96e"></div><div class="section-label-text" style="color:#c9a96e">How it works</div></div>
+        <h2 class="section-title dark">Three steps to your<br>perfect room</h2>
+        <p class="section-sub dark">No learning curve. No tutorials needed. Just pick a room and start placing furniture.</p>
+    </div>
+    <div class="steps-grid reveal">
+        <div class="step">
+            <div class="step-connector"></div>
+            <div class="step-num">1</div>
+            <div class="step-title">Choose your room type</div>
+            <div class="step-desc">Select from 13 room types — bedroom, living room, kitchen, office, restaurant, cafe, gym and more. Each comes pre-loaded with the right furniture options.</div>
+        </div>
+        <div class="step">
+            <div class="step-connector"></div>
+            <div class="step-num">2</div>
+            <div class="step-title">Place & arrange furniture</div>
+            <div class="step-desc">Drag furniture from the panel into your room. Rotate, resize and reposition items freely. The 3D view updates in real time as you work.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-title">Walk through & export</div>
+            <div class="step-desc">Switch to walk-through mode to experience your design first-hand. When you're happy, save your design or export it as an image.</div>
+        </div>
+    </div>
+</section>
+
+<!-- ROOM TYPES -->
+<section class="section section-dark" id="rooms" style="padding-bottom:0">
+    <div class="reveal">
+        <div class="section-label"><div class="section-label-line"></div><div class="section-label-text">Room types</div></div>
+        <h2 class="section-title">Design any space,<br>any purpose</h2>
+        <p class="section-sub">Every room type comes with a tailored furniture library built for that specific space.</p>
+    </div>
+    <div class="rooms-grid reveal" style="margin-top:72px">
+        <a href="/editor" class="room-card">
+            <img src="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=80&w=800" alt="Bedroom" loading="lazy">
+            <div class="room-card-overlay"></div>
+            <div class="room-card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6H11M7 2L11 6L7 10" stroke="rgba(201,169,110,0.9)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div class="room-card-content"><div class="room-card-title">Bedroom</div><div class="room-card-sub">Beds · Wardrobes · Nightstands</div></div>
         </a>
-        <a href="/editor" class="card">
-            <svg class="card-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="4" y="4" width="24" height="24" rx="2" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-                <rect x="9" y="9" width="6" height="6" rx="1" fill="rgba(0,0,0,0.25)"/>
-                <rect x="17" y="9" width="6" height="6" rx="1" fill="rgba(0,0,0,0.25)"/>
-                <rect x="9" y="17" width="6" height="6" rx="1" fill="rgba(0,0,0,0.25)"/>
-                <rect x="17" y="17" width="6" height="6" rx="1" fill="rgba(0,0,0,0.25)"/>
-            </svg>
-            <div class="card-title">Office</div>
-            <div class="card-sub">Workstation · Conference</div>
+        <a href="/editor" class="room-card">
+            <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=800" alt="Living Room" loading="lazy">
+            <div class="room-card-overlay"></div>
+            <div class="room-card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6H11M7 2L11 6L7 10" stroke="rgba(201,169,110,0.9)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div class="room-card-content"><div class="room-card-title">Living Room</div><div class="room-card-sub">Sofas · Coffee Tables · TV Units</div></div>
         </a>
-        <a href="/editor" class="card">
-            <svg class="card-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 10H28V26C28 27.1 27.1 28 26 28H6C4.9 28 4 27.1 4 26V10Z" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-                <path d="M2 10H30" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round"/>
-                <path d="M12 10V6C12 4.9 12.9 4 14 4H18C19.1 4 20 4.9 20 6V10" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-            </svg>
-            <div class="card-title">Commercial</div>
-            <div class="card-sub">Restaurant · Cafe · Shop</div>
+        <a href="/editor" class="room-card">
+            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800" alt="Office" loading="lazy">
+            <div class="room-card-overlay"></div>
+            <div class="room-card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6H11M7 2L11 6L7 10" stroke="rgba(201,169,110,0.9)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div class="room-card-content"><div class="room-card-title">Office</div><div class="room-card-sub">Desks · Chairs · Shelving</div></div>
         </a>
-        <a href="/editor" class="card">
-            <svg class="card-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="4" y="6" width="24" height="20" rx="2" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-                <line x1="4" y1="12" x2="28" y2="12" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>
-                <line x1="12" y1="12" x2="12" y2="26" stroke="rgba(0,0,0,0.2)" stroke-width="1.5"/>
-            </svg>
-            <div class="card-title">Other</div>
-            <div class="card-sub">Classroom · Gym · Library</div>
+        <a href="/editor" class="room-card">
+            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=800" alt="Restaurant" loading="lazy">
+            <div class="room-card-overlay"></div>
+            <div class="room-card-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6H11M7 2L11 6L7 10" stroke="rgba(201,169,110,0.9)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div class="room-card-content"><div class="room-card-title">Restaurant</div><div class="room-card-sub">Dining Tables · Bar · Kitchen</div></div>
         </a>
     </div>
-</div>
+</section>
+
+<!-- SHOWCASE -->
+<section class="showcase">
+    <div class="showcase-inner reveal">
+        <div>
+            <div class="section-label"><div class="section-label-line"></div><div class="section-label-text">The studio</div></div>
+            <h2 class="section-title" style="margin-top:16px">A professional tool<br>built for everyone</h2>
+            <p class="section-sub" style="margin-top:16px">Whether you're an interior designer, a homeowner planning a renovation, or a business owner designing a new space — the studio gives you the power to visualise it all.</p>
+            <div class="showcase-features">
+                <div class="showcase-feat">
+                    <div class="feat-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 14L8 2L14 14" stroke="rgba(201,169,110,0.8)" stroke-width="1.2" stroke-linecap="round"/><path d="M4 10H12" stroke="rgba(201,169,110,0.8)" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+                    <div><div class="feat-title">No software to install</div><div class="feat-desc">Runs entirely in your browser. Open the link and start designing immediately.</div></div>
+                </div>
+                <div class="showcase-feat">
+                    <div class="feat-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="1" stroke="rgba(201,169,110,0.8)" stroke-width="1.2"/><path d="M5 8H11M8 5V11" stroke="rgba(201,169,110,0.8)" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+                    <div><div class="feat-title">Free to use</div><div class="feat-desc">Create an account and design unlimited rooms at no cost.</div></div>
+                </div>
+                <div class="showcase-feat">
+                    <div class="feat-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L10 6H14L11 9L12 13L8 11L4 13L5 9L2 6H6L8 2Z" stroke="rgba(201,169,110,0.8)" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+                    <div><div class="feat-title">Instant results</div><div class="feat-desc">The 3D view updates live as you drag and drop — no rendering wait times.</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="showcase-img">
+            <img src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1200" alt="3D room design studio">
+            <div class="showcase-img-badge">
+                <div class="badge-num">3D</div>
+                <div class="badge-text">Real-time view</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+    <div class="cta-overlay"></div>
+    <div class="cta-content reveal">
+        <div class="eyebrow" style="justify-content:center;margin-bottom:24px">
+            <div class="eyebrow-line"></div>
+            <div class="eyebrow-text">Get started free</div>
+            <div class="eyebrow-line"></div>
+        </div>
+        <h2 class="cta-title">Ready to design your<br><em>perfect space?</em></h2>
+        <p class="cta-sub">No account needed to start. Jump straight into the studio.</p>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap">
+            <a href="/editor" class="btn-primary" style="font-size:12px;padding:18px 48px">
+                Open the Studio
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7H13M8 2L13 7L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a onclick="showRegister()" class="btn-ghost" style="color:rgba(255,255,255,0.4);border-color:rgba(255,255,255,0.2);cursor:pointer">Create free account</a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-logo">
+        <div class="nav-logo-icon" style="width:24px;height:24px">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                <rect x="1" y="1" width="6" height="6" stroke="rgba(201,169,110,0.7)" stroke-width="1.2"/>
+                <rect x="9" y="1" width="6" height="6" stroke="rgba(201,169,110,0.4)" stroke-width="1.2"/>
+                <rect x="1" y="9" width="6" height="6" stroke="rgba(201,169,110,0.4)" stroke-width="1.2"/>
+                <rect x="9" y="9" width="6" height="6" stroke="rgba(201,169,110,0.7)" stroke-width="1.2"/>
+            </svg>
+        </div>
+        <span class="footer-copy">© 2025 Interior Designer Studio</span>
+    </div>
+    <div class="footer-links">
+        <a href="/editor" class="footer-link">Studio</a>
+        <a onclick="showLogin()" class="footer-link" style="cursor:pointer">Sign In</a>
+        <a onclick="showRegister()" class="footer-link" style="cursor:pointer">Register</a>
+    </div>
+</footer>
 
 <script>
-    function showError(id, msg) {
-        const el = document.getElementById(id);
-        el.textContent = msg; el.style.display = 'block';
+    // Nav scroll effect
+    window.addEventListener('scroll', () => {
+        document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Modal logic
+    // Toast system
+    function showToast(type, title, msg, duration = 4000) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+        toast.innerHTML = `
+            <span class="toast-icon">${icon}</span>
+            <div class="toast-body">
+                <div class="toast-title">${title}</div>
+                ${msg ? `<div class="toast-msg">${msg}</div>` : ''}
+            </div>
+            <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => dismissToast(toast), duration);
     }
-    function clearError(id) {
-        const el = document.getElementById(id);
-        el.textContent = ''; el.style.display = 'none';
+    function dismissToast(toast) {
+        if (!toast || toast.classList.contains('toast-out')) return;
+        toast.classList.add('toast-out');
+        setTimeout(() => toast.remove(), 300);
     }
 
-    function showLogin() {
-        document.getElementById('loginOverlay').classList.remove('hidden');
-        document.getElementById('registerOverlay').classList.add('hidden');
-        clearError('loginError');
-    }
-    function hideLogin() {
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        clearError('loginError');
-    }
-    function showRegister() {
-        document.getElementById('registerOverlay').classList.remove('hidden');
-        document.getElementById('loginOverlay').classList.add('hidden');
-        clearError('registerError');
-    }
-    function hideRegister() {
-        document.getElementById('registerOverlay').classList.add('hidden');
-        document.getElementById('regUsername').value = '';
-        document.getElementById('regPassword').value = '';
-        document.getElementById('regConfirmPassword').value = '';
-        clearError('registerError');
-    }
+    function showError(id, msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
+    function clearError(id) { const el=document.getElementById(id); el.textContent=''; el.style.display='none'; }
+    function showLogin() { document.getElementById('loginOverlay').classList.remove('hidden'); document.getElementById('registerOverlay').classList.add('hidden'); clearError('loginError'); }
+    function hideLogin() { document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('username').value=''; document.getElementById('password').value=''; clearError('loginError'); }
+    function showRegister() { document.getElementById('registerOverlay').classList.remove('hidden'); document.getElementById('loginOverlay').classList.add('hidden'); clearError('registerError'); }
+    function hideRegister() { document.getElementById('registerOverlay').classList.add('hidden'); document.getElementById('regUsername').value=''; document.getElementById('regPassword').value=''; document.getElementById('regConfirmPassword').value=''; clearError('registerError'); }
 
     async function handleRegister() {
         clearError('registerError');
-        const username = document.getElementById('regUsername').value.trim();
-        const password = document.getElementById('regPassword').value;
-        const confirmPassword = document.getElementById('regConfirmPassword').value;
-
-        if (!username || !password || !confirmPassword) { showError('registerError','Please fill in all fields'); return; }
-        if (password !== confirmPassword) { showError('registerError','Passwords do not match'); return; }
-
+        const username=document.getElementById('regUsername').value.trim();
+        const password=document.getElementById('regPassword').value;
+        const confirmPassword=document.getElementById('regConfirmPassword').value;
+        if(!username||!password||!confirmPassword){
+            showError('registerError','Please fill in all fields');
+            showToast('error','Missing fields','Please fill in all fields.');
+            return;
+        }
+        if(password!==confirmPassword){
+            showError('registerError','Passwords do not match');
+            showToast('error','Passwords do not match','Make sure both passwords are identical.');
+            return;
+        }
         try {
-            const res  = await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, password }) });
-            const data = await res.json();
-            if (data.success) { hideRegister(); showLogin(); }
-            else { showError('registerError', data.message || 'Registration failed'); }
-        } catch(e) { showError('registerError','Network error. Please try again.'); }
+            const res=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+            const data=await res.json();
+            if(data.success){
+                hideRegister();
+                showToast('success','Account created','You can now sign in with your new account.');
+                showLogin();
+            } else {
+                showError('registerError',data.message||'Registration failed');
+                showToast('error','Registration failed', data.message||'Please try a different username.');
+            }
+        } catch(e){
+            showError('registerError','Network error. Please try again.');
+            showToast('error','Network error','Could not connect. Please try again.');
+        }
     }
-
     async function handleLogin() {
         clearError('loginError');
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-
-        if (!username || !password) { showError('loginError','Please enter username and password'); return; }
-
+        const username=document.getElementById('username').value.trim();
+        const password=document.getElementById('password').value;
+        if(!username||!password){
+            showError('loginError','Please enter username and password');
+            showToast('error','Missing fields','Please enter your username and password.');
+            return;
+        }
         try {
-            const res  = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, password }) });
-            const data = await res.json();
-            if (data.success) {
-                document.body.classList.add('page-transition');
-                setTimeout(() => { window.location.href = '/editor'; }, 300);
-            } else { showError('loginError', data.message || 'Invalid credentials'); }
-        } catch(e) { showError('loginError','Network error. Please try again.'); }
+            const res=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+            const data=await res.json();
+            if(data.success){
+                showToast('success','Signed in','Welcome back. Taking you to the studio...');
+                hideLogin();
+                setTimeout(()=>{document.body.style.opacity='0';document.body.style.transition='opacity 0.4s';setTimeout(()=>{window.location.href='/editor';},400);}, 800);
+            } else {
+                showError('loginError',data.message||'Invalid credentials');
+                showToast('error','Sign in failed', data.message||'Incorrect username or password.');
+            }
+        } catch(e){
+            showError('loginError','Network error. Please try again.');
+            showToast('error','Network error','Could not connect. Please try again.');
+        }
     }
-
-    // Close modal on backdrop click
-    document.getElementById('loginOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) hideLogin(); });
-    document.getElementById('registerOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) hideRegister(); });
-
-    // Enter key support
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('password').addEventListener('keypress', e => { if(e.key==='Enter') handleLogin(); });
-        document.getElementById('regConfirmPassword').addEventListener('keypress', e => { if(e.key==='Enter') handleRegister(); });
-    });
+    document.getElementById('loginOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)hideLogin();});
+    document.getElementById('registerOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)hideRegister();});
+    document.getElementById('password').addEventListener('keypress',e=>{if(e.key==='Enter')handleLogin();});
+    document.getElementById('regConfirmPassword').addEventListener('keypress',e=>{if(e.key==='Enter')handleRegister();});
 </script>
 </body>
 </html>

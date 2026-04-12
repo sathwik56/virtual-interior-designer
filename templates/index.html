@@ -4,15 +4,31 @@
     <title>Virtual Interior Designer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             font-family: 'Inter', sans-serif;
         }
+        /* ── DESIGN SYSTEM VARIABLES ── */
+        :root {
+            --bg-sidebar: #141210;
+            --bg-sidebar-section: #1a1714;
+            --bg-sidebar-hover: #221f1b;
+            --bg-input: #1e1b18;
+            --border: #2e2a25;
+            --text-primary: #f0ece4;
+            --text-secondary: #9a9080;
+            --text-muted: #5a5248;
+            --accent: #c9a96e;
+            --accent-dark: #a8884e;
+            --danger: #ef4444;
+        }
+
         body { 
             margin: 0; 
             overflow: hidden;
             animation: fadeIn 0.5s ease-in;
-            background: #ffffff;
+            background: #0e0c0a;
         }
         
         @keyframes fadeIn {
@@ -41,674 +57,309 @@
             display: block; 
         }
         
-        /* Glassmorphism Panels */
+        /* Dark Sidebar Panel */
         .glass-panel {
-            background: linear-gradient(160deg, rgba(255, 255, 255, 0.99) 0%, rgba(246, 248, 250, 0.99) 100%);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: var(--bg-sidebar);
             border: none;
-            border-right: 1px solid rgba(203, 213, 225, 0.6);
+            border-right: 1px solid var(--border);
             border-radius: 0;
             position: fixed;
-            box-shadow: 2px 0 24px rgba(0, 0, 0, 0.1), inset -1px 0 0 rgba(255,255,255,0.8);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.4);
         }
         
         /* Login Modal */
         .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            position: fixed; top:0; left:0; right:0; bottom:0;
+            background: rgba(0,0,0,0.75);
             backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             z-index: 100;
         }
-        
         .login-modal {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(20px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 40px;
-            width: 350px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: #faf8f4;
+            padding: 40px 36px 32px;
+            width: 360px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.5);
         }
-        
         .login-input {
-            width: 100%;
-            height: 45px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.5);
-            padding: 0 15px;
-            font-size: 14px;
-            margin-bottom: 15px;
+            width: 100%; height: 46px;
+            border: 1px solid #e0d8cc;
+            background: #fff;
+            padding: 0 14px; font-size: 14px; color: #141210;
+            margin-bottom: 12px; outline: none;
+            transition: border-color 0.2s; box-sizing: border-box;
         }
-        
-        .login-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
+        .login-input:focus { border-color: #c9a96e; box-shadow: 0 0 0 3px rgba(201,169,110,0.12); }
+        .login-input::placeholder { color: #c0b8ac; }
         
         /* Scrollbar styling */
-        .glass-panel::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .glass-panel::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }
-        
-        .glass-panel::-webkit-scrollbar-thumb {
-            background: rgba(132, 204, 22, 0.3);
-            border-radius: 10px;
-        }
-        
-        .glass-panel::-webkit-scrollbar-thumb:hover {
-            background: rgba(132, 204, 22, 0.5);
-        }
-        
-        /* Force readable labels */
+        .glass-panel::-webkit-scrollbar { width: 4px; }
+        .glass-panel::-webkit-scrollbar-track { background: transparent; }
+        .glass-panel::-webkit-scrollbar-thumb { background: #2e2a25; border-radius: 10px; }
+        .glass-panel::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* Labels */
         .label-text {
-            color: #1e293b !important;
-            font-weight: 700 !important;
-            font-size: 11px !important;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-shadow: none;
-        }
-        
-        .label-icon {
-            font-size: 16px;
-            color: #84cc16;
-            filter: drop-shadow(0 2px 4px rgba(132, 204, 22, 0.3));
-        }
-        
-        /* Professional Buttons */
-        .modern-btn {
-            height: 38px;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 600;
-            font-size: 11px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            cursor: pointer;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
-            color: #1e293b;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .modern-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(132, 204, 22, 0.15), transparent);
-            transition: left 0.5s;
-        }
-        
-        .modern-btn:hover::before {
-            left: 100%;
-        }
-        
-        .modern-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(132, 204, 22, 0.3);
-            background: linear-gradient(135deg, rgba(132, 204, 22, 0.15) 0%, rgba(132, 204, 22, 0.08) 100%);
-            border-color: #84cc16;
-        }
-        
-        .modern-btn:active {
-            transform: translateY(0px);
-            box-shadow: 0 2px 6px rgba(132, 204, 22, 0.2);
-        }
-        
-        .modern-btn i {
-            font-size: 14px;
-            color: #64748b;
-            transition: all 0.3s ease;
-        }
-        
-        .modern-btn:hover i {
-            color: #84cc16;
-            transform: scale(1.1);
-        }
-        
-        /* Primary action button */
-        .btn-primary {
-            background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%) !important;
-            color: white !important;
-            border-color: #84cc16 !important;
-            box-shadow: 0 4px 16px rgba(132, 204, 22, 0.4) !important;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #65a30d 0%, #4d7c0f 100%) !important;
-            border-color: #65a30d !important;
-            box-shadow: 0 6px 24px rgba(132, 204, 22, 0.6) !important;
-            transform: translateY(-3px) !important;
-        }
-        
-        .btn-primary i {
-            color: white !important;
-        }
-        
-        .btn-primary:hover i {
-            color: white !important;
-        }
-        
-        /* Danger button */
-        .btn-danger {
-            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%) !important;
-            color: white !important;
-            border-color: #f44336 !important;
-            box-shadow: 0 4px 16px rgba(244, 67, 54, 0.4) !important;
-        }
-        
-        .btn-danger:hover {
-            background: linear-gradient(135deg, #da190b 0%, #b71c1c 100%) !important;
-            border-color: #da190b !important;
-            box-shadow: 0 6px 24px rgba(244, 67, 54, 0.6) !important;
-            transform: translateY(-3px) !important;
-        }
-        
-        .btn-danger i {
-            color: white !important;
-        }
-        
-        .btn-danger:hover i {
-            color: white !important;
-        }
-        
-        /* Section Dividers */
-        .section-divider {
-            border: none;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.4), transparent);
-            margin: 16px 0;
-        }
-        
-        /* 3D Viewport Border */
-        canvas {
-            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(100, 116, 139, 0.25);
-        }
-        
-        /* Button row layout */
-        .button-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        
-        /* Dropdown styling */
-        select {
-            height: 38px;
-            border-radius: 8px;
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
-            font-size: 12px;
-            padding: 0 12px;
-            transition: all 0.3s ease;
-            color: #1e293b;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-        }
-        
-        select:focus {
-            outline: none;
-            border-color: #84cc16;
-            box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.15), 0 4px 12px rgba(132, 204, 22, 0.2);
-            background: linear-gradient(135deg, rgba(132, 204, 22, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
-        }
-        
-        select option {
-            background: #ffffff;
-            color: #1e293b;
-        }
-        
-        /* Color picker styling */
-        input[type="color"] {
-            height: 38px;
-            width: 100%;
-            border-radius: 8px;
-            border: 2px solid rgba(132, 204, 22, 0.3);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-        
-        input[type="color"]:hover {
-            border-color: #84cc16;
-            box-shadow: 0 4px 16px rgba(132, 204, 22, 0.4);
-            transform: translateY(-2px);
-        }
-        
-        /* Number input styling */
-        input[type="number"] {
-            height: 38px;
-            border-radius: 8px;
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
-            font-size: 12px;
-            padding: 0 12px;
-            transition: all 0.3s ease;
-            width: 100%;
-            color: #1e293b;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-        }
-        
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #84cc16;
-            box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.15), 0 4px 12px rgba(132, 204, 22, 0.2);
-            background: linear-gradient(135deg, rgba(132, 204, 22, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
-        }
-        
-        /* Room size row */
-        .room-size-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        
-        .room-size-item {
-            flex: 1;
-        }
-        
-        .room-size-label {
-            color: #475569 !important;
+            color: var(--text-secondary) !important;
             font-weight: 600 !important;
             font-size: 10px !important;
-            margin-bottom: 6px;
-            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px;
+            text-transform: uppercase; letter-spacing: 1.2px;
+        }
+        .label-icon { font-size: 14px; color: var(--accent); }
+
+        /* Buttons */
+        .modern-btn {
+            height: 34px;
+            border-radius: 0;
+            transition: all 0.2s ease;
+            font-weight: 600; font-size: 11px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            background: var(--bg-sidebar-section);
+            color: var(--text-secondary);
             letter-spacing: 0.5px;
         }
-        
+        .modern-btn:hover {
+            background: var(--bg-sidebar-hover);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .modern-btn i { font-size: 12px; color: var(--text-muted); }
+        .modern-btn:hover i { color: var(--accent); }
+
+        .btn-primary {
+            background: var(--accent) !important;
+            color: #141210 !important;
+            border-color: var(--accent) !important;
+            font-weight: 700 !important;
+        }
+        .btn-primary:hover { background: var(--accent-dark) !important; border-color: var(--accent-dark) !important; color: #141210 !important; }
+        .btn-primary i { color: #141210 !important; }
+        .btn-primary:hover i { color: #141210 !important; }
+
+        .btn-danger {
+            background: rgba(239,68,68,0.08) !important;
+            color: #ef4444 !important;
+            border-color: rgba(239,68,68,0.25) !important;
+        }
+        .btn-danger:hover { background: #ef4444 !important; color: #fff !important; border-color: #ef4444 !important; }
+        .btn-danger i { color: #ef4444 !important; }
+        .btn-danger:hover i { color: #fff !important; }
+
+        .section-divider {
+            border: none; height: 1px;
+            background: var(--border);
+            margin: 12px 0;
+        }
+
+        canvas { display: block; }
+
+        .button-row { display: flex; gap: 6px; margin-bottom: 6px; }
+
+        /* Inputs */
+        select, input[type="number"] {
+            height: 34px;
+            border-radius: 0;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            font-size: 12px; padding: 0 10px;
+            color: var(--text-primary);
+            width: 100%; outline: none;
+            transition: border-color 0.2s;
+        }
+        select:focus, input[type="number"]:focus { border-color: var(--accent); }
+        select option { background: #1a1714; color: var(--text-primary); }
+
+        input[type="color"] {
+            height: 34px; width: 100%;
+            border-radius: 0;
+            border: 1px solid var(--border);
+            cursor: pointer; background: var(--bg-input);
+        }
+        input[type="color"]:hover { border-color: var(--accent); }
+
+        .room-size-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .room-size-item { flex: 1; }
+        .room-size-label {
+            color: var(--text-muted) !important;
+            font-weight: 600 !important; font-size: 10px !important;
+            margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
         /* Collapsible sections */
         .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            padding: 8px 12px;
-            margin: 0 -12px;
-            transition: all 0.3s ease;
-            border-radius: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; padding: 7px 10px; margin: 0 -10px;
+            border-radius: 0; transition: background 0.2s;
         }
-        
-        .section-header:hover {
-            background: linear-gradient(135deg, rgba(132, 204, 22, 0.1) 0%, rgba(132, 204, 22, 0.05) 100%);
-            box-shadow: 0 2px 6px rgba(132, 204, 22, 0.15);
+        .section-header:hover { background: var(--bg-sidebar-hover); }
+        .collapse-arrow { font-size: 10px; color: var(--text-muted); transition: transform 0.2s; }
+        .collapse-arrow.collapsed { transform: rotate(-90deg); }
+        .section-content { overflow: hidden; transition: max-height 0.3s ease, opacity 0.2s; }
+        .section-content.collapsed { max-height: 0; opacity: 0; }
+        .section-content.expanded { max-height: 1500px; opacity: 1; }
+
+        /* Furniture item cards */
+        .furn-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 10px;
+            cursor: pointer; transition: background 0.15s;
+            border: 1px solid transparent;
+            border-radius: 0;
         }
-        
-        .collapse-arrow {
-            font-size: 14px;
-            font-weight: bold;
-            color: #84cc16;
-            transition: transform 0.3s ease;
-            filter: drop-shadow(0 2px 4px rgba(132, 204, 22, 0.3));
+        .furn-item:hover { background: var(--bg-sidebar-hover); border-color: var(--border); }
+        .furn-item:active { background: rgba(201,169,110,0.1); border-color: var(--accent); }
+        .furn-item-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
+        .furn-item-name { font-size: 11px; color: var(--text-secondary); font-weight: 500; letter-spacing: 0.3px; }
+
+        /* Category header inside furniture list */
+        .furn-category {
+            font-size: 9px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            padding: 10px 10px 4px; margin: 0 -10px;
+            border-top: 1px solid var(--border);
         }
-        
-        .collapse-arrow.collapsed {
-            transform: rotate(-90deg);
-        }
-        
-        .section-content {
-            overflow: hidden;
-            transition: max-height 0.3s ease, opacity 0.3s ease;
-        }
-        
-        .section-content.collapsed {
-            max-height: 0;
-            opacity: 0;
-        }
-        
-        .section-content.expanded {
-            max-height: 1500px;
-            opacity: 1;
-        }
-        
-        /* Selection Panel Categories */
-        .category-section {
-            margin-bottom: 8px;
-        }
-        
-        .category-title {
-            font-family: 'Inter', sans-serif;
-            font-size: 9px;
-            font-weight: 700;
-            color: #333;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-            padding-bottom: 2px;
-            border-bottom: 1px solid rgba(200, 200, 200, 0.3);
-        }
-        
-        .item-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 4px;
-        }
-        
-        .item-card {
-            background: #f8f9fa;
-            border: 1px solid rgba(200, 200, 200, 0.4);
-            border-radius: 4px;
-            padding: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-        
-        .item-card:hover {
-            background: #e9ecef;
-            border-color: #4ade80;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(74, 222, 128, 0.3);
-        }
-        
-        .item-icon {
-            font-size: 16px;
-            margin-bottom: 1px;
-        }
-        
-        .item-name {
-            font-family: 'Inter', sans-serif;
-            font-size: 7px;
-            color: #333;
-            font-weight: 500;
-        }
-        
-        .help-circle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(59, 130, 246, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
-            z-index: 30;
-            color: #000;
-            font-weight: bold;
-        }
-        
-        .help-circle:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
-        }
-        
-        /* Help Panel */
-        .help-panel {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            border: 2px solid rgba(59, 130, 246, 0.5);
-            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 320px;
-            padding: 20px;
-            z-index: 25;
-            max-height: 70vh;
+        .furn-category:first-child { border-top: none; padding-top: 4px; }
+
+        /* Right properties panel */
+        .props-panel {
+            position: fixed; right: 0; top: 0; bottom: 0;
+            width: 220px; z-index: 10;
+            background: var(--bg-sidebar);
+            border-left: 1px solid var(--border);
+            padding: 16px 14px;
             overflow-y: auto;
+            box-shadow: -4px 0 24px rgba(0,0,0,0.4);
         }
-        
-        .help-title {
-            color: #000000 !important;
-            font-weight: 900 !important;
-            font-size: 16px !important;
+        .props-panel::-webkit-scrollbar { width: 4px; }
+        .props-panel::-webkit-scrollbar-thumb { background: #2e2a25; border-radius: 4px; }
+        .props-row { margin-bottom: 10px; }
+        .props-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 4px; }
+        .props-value { font-size: 12px; color: var(--text-primary); font-weight: 500; }
+        .props-empty { font-size: 11px; color: var(--text-muted); text-align: center; padding: 30px 0; line-height: 1.8; letter-spacing: 0.3px; }
+
+        /* Top toolbar */
+        .top-toolbar {
+            position: fixed; top: 0; left: 280px; right: 220px; height: 48px;
+            background: #0e0c0a;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 2px;
+            padding: 0 16px; z-index: 9;
         }
-        
-        .help-content {
-            color: #000000 !important;
-            font-weight: 700 !important;
-            font-size: 12px !important;
+        .toolbar-btn {
+            height: 32px; padding: 0 14px;
+            border-radius: 0; border: 1px solid transparent;
+            background: none; color: var(--text-muted);
+            font-size: 11px; font-weight: 500; cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+            transition: all 0.15s; letter-spacing: 0.5px;
         }
-        
+        .toolbar-btn:hover { background: var(--bg-sidebar-hover); color: var(--text-primary); border-color: var(--border); }
+        .toolbar-btn.active { background: rgba(201,169,110,0.12); color: var(--accent); border-color: rgba(201,169,110,0.3); }
+        .toolbar-sep { width: 1px; height: 20px; background: var(--border); margin: 0 6px; }
+
         /* Loading Screen */
         .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease-out;
-            backdrop-filter: none;
+            position: fixed; inset: 0;
+            background: #0e0c0a;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; transition: opacity 0.5s ease-out;
         }
-        
-        .loading-screen.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        }
-        
+        .loading-screen.fade-out { opacity: 0; pointer-events: none; }
         .spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(132, 204, 22, 0.2);
-            border-top: 4px solid #84cc16;
+            width: 40px; height: 40px;
+            border: 2px solid rgba(201,169,110,0.15);
+            border-top: 2px solid #c9a96e;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 13px; font-weight: 500; color: rgba(201,169,110,0.5);
+            letter-spacing: 4px; text-transform: uppercase; margin-bottom: 40px;
         }
-        
-        .loading-text {
-            color: #1e293b;
-            font-size: 18px;
-            font-weight: 600;
-            margin-top: 20px;
-            letter-spacing: 1px;
-        }
-        
+        .loading-text { color: var(--text-muted); font-size: 11px; font-weight: 400; margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; }
+
         /* Start Options Modal */
         .start-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9998;
-            opacity: 0;
-            transition: opacity 0.5s ease-in;
+            position: fixed; inset: 0;
+            background: rgba(10,8,6,0.97);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9998; opacity: 0; transition: opacity 0.4s ease-in;
+            padding: 20px;
         }
-        
-        .start-modal-overlay.show {
-            opacity: 1;
+        .start-modal-overlay.show { opacity: 1; }
+        .start-modal-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        .start-modal-eyebrow {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
         }
-        
-        .start-modal-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        
+        .start-modal-eyebrow-line { width: 24px; height: 1px; background: #c9a96e; }
+        .start-modal-eyebrow-text { font-size: 10px; font-weight: 500; color: #c9a96e; letter-spacing: 3px; text-transform: uppercase; }
+
         .start-modal-title {
-            color: #1e293b;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 40px;
-            text-align: center;
+            font-family: 'Cormorant Garamond', serif;
+            color: #f0ece4; font-size: clamp(28px, 4vw, 44px); font-weight: 600;
+            margin-bottom: 40px; text-align: center; letter-spacing: -0.5px; line-height: 1.1;
         }
-        
-        .start-options-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            max-width: 900px;
-        }
-        
+        .start-options-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; max-width: 820px; width: 100%; background: #2e2a25; }
         .start-option-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(132, 204, 22, 0.3);
-            border-radius: 15px;
-            padding: 40px 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: #141210; padding: 36px 28px;
+            text-align: center; cursor: pointer;
+            transition: background 0.2s;
+            position: relative; overflow: hidden;
         }
-        
-        .start-option-card:hover {
-            transform: translateY(-5px);
-            border-color: #84cc16;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 8px 24px rgba(132, 204, 22, 0.3);
+        .start-option-card::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+            height: 2px; background: #c9a96e;
+            transform: scaleX(0); transition: transform 0.25s;
         }
-        
-        .start-option-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-        
+        .start-option-card:hover { background: #1a1714; }
+        .start-option-card:hover::after { transform: scaleX(1); }
+        .start-option-icon { font-size: 36px; margin-bottom: 16px; }
         .start-option-title {
-            color: #1e293b;
-            font-size: 18px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: #f0ece4; font-size: 12px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 2px;
         }
-        
+
         .close-modal-btn {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.8);
-            border: 2px solid rgba(132, 204, 22, 0.3);
-            border-radius: 50%;
-            font-size: 24px;
-            color: #1e293b;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            position: absolute; top: 24px; right: 24px;
+            width: 36px; height: 36px;
+            background: #1a1714; border: 1px solid #2e2a25;
+            font-size: 18px; color: #5a5248;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
         }
-        
-        .close-modal-btn:hover {
-            background: rgba(255, 255, 255, 1);
-            border-color: #84cc16;
-            transform: rotate(90deg);
-        }
-        
-        /* Walk Mode Controls Overlay */
+        .close-modal-btn:hover { border-color: #c9a96e; color: #c9a96e; }
+
+        /* Walk Mode Controls */
         .walk-controls {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 12px 20px;
-            border-radius: 12px;
-            border: 2px solid rgba(132, 204, 22, 0.5);
-            z-index: 50;
-            display: none;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(10,8,6,0.92); backdrop-filter: blur(12px);
+            padding: 14px 20px;
+            border: 1px solid rgba(201,169,110,0.3);
+            z-index: 50; display: none;
         }
-        
-        .walk-controls.active {
-            display: block;
-        }
-        
-        .walk-controls-title {
-            color: #84cc16;
-            font-size: 11px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .walk-controls-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 45px);
-            gap: 4px;
-            margin-bottom: 8px;
-        }
-        
-        .walk-key {
-            width: 45px;
-            height: 45px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            font-weight: 700;
-            color: #ffffff;
-            transition: all 0.2s ease;
-        }
-        
-        .walk-key.active {
-            background: rgba(132, 204, 22, 0.5);
-            border-color: #84cc16;
-            transform: scale(0.95);
-        }
-        
-        .walk-key.empty {
-            opacity: 0;
-        }
-        
-        .walk-hint {
-            color: #ffffff;
-            font-size: 10px;
-            text-align: center;
-            margin-top: 6px;
-            opacity: 0.8;
-        }
+        .walk-controls.active { display: block; }
+        .walk-controls-title { color: var(--accent); font-size: 9px; font-weight: 700; text-align: center; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        .walk-controls-grid { display: grid; grid-template-columns: repeat(3,38px); gap: 3px; margin-bottom: 8px; }
+        .walk-key { width:38px; height:38px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:#9a9080; }
+        .walk-key.active { background:rgba(201,169,110,0.2); border-color:var(--accent); color: var(--accent); }
+        .walk-key.empty { opacity:0; }
+        .walk-hint { color:var(--text-muted); font-size:10px; text-align:center; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
 
 <!-- Loading Screen -->
 <div id="loadingScreen" class="loading-screen">
+    <div class="loading-logo">Interior Designer</div>
     <div class="spinner"></div>
-    <div class="loading-text">Loading your workspace...</div>
+    <div class="loading-text">Preparing your studio</div>
 </div>
 
 <!-- Walk Mode Controls Overlay -->
@@ -731,93 +382,115 @@
 
     <!-- Step 1: How to start -->
     <div id="step1">
-        <h2 class="start-modal-title">Choose how you'd like to start</h2>
+        <div class="start-modal-eyebrow">
+            <div class="start-modal-eyebrow-line"></div>
+            <div class="start-modal-eyebrow-text">Welcome to the Studio</div>
+            <div class="start-modal-eyebrow-line"></div>
+        </div>
+        <h2 class="start-modal-title">How would you like<br>to start?</h2>
         <div class="start-options-grid">
             <div class="start-option-card" onclick="continueSession()">
-                <div class="start-option-icon">🔄</div>
+                <div class="start-option-icon">↩</div>
                 <div class="start-option-title">Continue Session</div>
-                <p id="sessionInfo" style="font-size: 11px; color: #a0a0a0; margin-top: 8px;">No previous session</p>
+                <p id="sessionInfo" style="font-size: 11px; color: #5a5248; margin-top: 10px; letter-spacing: 0.3px;">No previous session</p>
             </div>
             <div class="start-option-card" onclick="goToStep2()">
-                <div class="start-option-icon">✏️</div>
+                <div class="start-option-icon">✦</div>
                 <div class="start-option-title">Start from Scratch</div>
             </div>
             <div class="start-option-card" onclick="loadMyProjects()">
-                <div class="start-option-icon">📁</div>
+                <div class="start-option-icon">⊞</div>
                 <div class="start-option-title">My Projects</div>
             </div>
         </div>
     </div>
 
     <!-- Step 2: What are you designing? -->
-    <div id="step2" style="display:none; width:100%; max-width:960px;">
-        <button onclick="goBackToStep1()" style="background:none;border:none;color:#64748b;font-size:14px;cursor:pointer;margin-bottom:20px;display:flex;align-items:center;gap:6px;">
+    <div id="step2" style="display:none; width:100%; max-width:900px;">
+        <button onclick="goBackToStep1()" style="background:none;border:none;color:#5a5248;font-size:12px;cursor:pointer;margin-bottom:24px;display:flex;align-items:center;gap:8px;letter-spacing:1px;text-transform:uppercase;">
             ← Back
         </button>
+        <div class="start-modal-eyebrow">
+            <div class="start-modal-eyebrow-line"></div>
+            <div class="start-modal-eyebrow-text">New Design</div>
+            <div class="start-modal-eyebrow-line"></div>
+        </div>
         <h2 class="start-modal-title">What are you designing?</h2>
-        <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:16px; max-width:960px;">
+        <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:1px; max-width:900px; background:#2e2a25;">
             <div class="start-option-card" onclick="selectCategory('home')">
                 <div class="start-option-icon">🏠</div>
                 <div class="start-option-title">Home</div>
-                <p style="font-size:11px;color:#64748b;margin-top:8px;">Bedroom, Living Room, Kitchen</p>
+                <p style="font-size:10px;color:#5a5248;margin-top:10px;letter-spacing:0.5px;">Bedroom · Living · Kitchen</p>
             </div>
             <div class="start-option-card" onclick="selectCategory('office')">
                 <div class="start-option-icon">🏢</div>
                 <div class="start-option-title">Office</div>
-                <p style="font-size:11px;color:#64748b;margin-top:8px;">Workstation, Conference, Reception</p>
+                <p style="font-size:10px;color:#5a5248;margin-top:10px;letter-spacing:0.5px;">Workstation · Conference</p>
             </div>
             <div class="start-option-card" onclick="selectCategory('commercial')">
                 <div class="start-option-icon">🏪</div>
                 <div class="start-option-title">Commercial</div>
-                <p style="font-size:11px;color:#64748b;margin-top:8px;">Shop, Restaurant, Cafe</p>
+                <p style="font-size:10px;color:#5a5248;margin-top:10px;letter-spacing:0.5px;">Restaurant · Cafe · Shop</p>
             </div>
             <div class="start-option-card" onclick="selectCategory('other')">
                 <div class="start-option-icon">🏫</div>
                 <div class="start-option-title">Other</div>
-                <p style="font-size:11px;color:#64748b;margin-top:8px;">Classroom, Gym, Library</p>
+                <p style="font-size:10px;color:#5a5248;margin-top:10px;letter-spacing:0.5px;">Classroom · Gym · Library</p>
             </div>
         </div>
     </div>
 
     <!-- Step 3: Pick room type -->
-    <div id="step3" style="display:none; width:100%; max-width:960px;">
-        <button onclick="goBackToStep2()" style="background:none;border:none;color:#64748b;font-size:14px;cursor:pointer;margin-bottom:20px;display:flex;align-items:center;gap:6px;">
+    <div id="step3" style="display:none; width:100%; max-width:900px;">
+        <button onclick="goBackToStep2()" style="background:none;border:none;color:#5a5248;font-size:12px;cursor:pointer;margin-bottom:24px;display:flex;align-items:center;gap:8px;letter-spacing:1px;text-transform:uppercase;">
             ← Back
         </button>
+        <div class="start-modal-eyebrow">
+            <div class="start-modal-eyebrow-line"></div>
+            <div class="start-modal-eyebrow-text" id="step3EyebrowText">Choose Room</div>
+            <div class="start-modal-eyebrow-line"></div>
+        </div>
         <h2 class="start-modal-title" id="step3Title">Choose Room Type</h2>
-        <div id="roomTypeGrid" style="display:grid; grid-template-columns: repeat(3,1fr); gap:16px; max-width:720px;"></div>
+        <div id="roomTypeGrid" style="display:grid; grid-template-columns: repeat(3,1fr); gap:1px; max-width:660px; background:#2e2a25;"></div>
     </div>
 </div>
 
 </div>
 
 <!-- Designer Panel -->
-<div class="glass-panel left-0 z-10" style="top: 0; height: 100vh; overflow-y: auto; padding: 20px; width: 320px;">
+<div class="glass-panel left-0 z-10" style="top: 0; height: 100vh; overflow-y: auto; padding: 16px 14px; width: 280px;">
 
     <!-- Logo / Home link -->
-    <a href="/" onclick="document.body.style.opacity='0.5'" style="display:flex; align-items:center; gap:10px; text-decoration:none; margin-bottom:18px; padding:10px 12px; border-radius:10px; transition:background 0.2s; background:linear-gradient(135deg,rgba(132,204,22,0.1),rgba(132,204,22,0.04)); border:1px solid rgba(132,204,22,0.25);">
-        <span style="font-size:22px;">🏠</span>
+    <a href="/" onclick="document.body.style.opacity='0.5'" style="display:flex; align-items:center; gap:10px; text-decoration:none; margin-bottom:20px; padding:12px 12px; border-bottom:1px solid var(--border);">
+        <div style="width:28px;height:28px;border:1px solid rgba(201,169,110,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                <rect x="1" y="1" width="6" height="6" stroke="rgba(201,169,110,0.8)" stroke-width="1.2"/>
+                <rect x="9" y="1" width="6" height="6" stroke="rgba(201,169,110,0.4)" stroke-width="1.2"/>
+                <rect x="1" y="9" width="6" height="6" stroke="rgba(201,169,110,0.4)" stroke-width="1.2"/>
+                <rect x="9" y="9" width="6" height="6" stroke="rgba(201,169,110,0.8)" stroke-width="1.2"/>
+            </svg>
+        </div>
         <div>
-            <div style="font-size:13px; font-weight:800; color:#1e293b; letter-spacing:0.5px;">INTERIOR DESIGNER</div>
-            <div style="font-size:9px; color:#84cc16; font-weight:600; letter-spacing:1px;">← BACK TO HOME</div>
+            <div style="font-size:10px; font-weight:600; color:var(--text-secondary); letter-spacing:2px; text-transform:uppercase;">Interior Designer</div>
+            <div style="font-size:9px; color:var(--accent); font-weight:500; letter-spacing:1.5px; margin-top:1px; text-transform:uppercase;">← Back to Home</div>
         </div>
     </a>
 
     <!-- User Status (if logged in) -->
-    <div id="userStatus" style="display: none; margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, rgba(132, 204, 22, 0.15) 0%, rgba(132, 204, 22, 0.08) 100%); border-radius: 12px; text-align: center; border: 2px solid rgba(132, 204, 22, 0.4); box-shadow: 0 4px 12px rgba(132, 204, 22, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);">
-        <div style="font-size: 12px; font-weight: 700; color: #65a30d; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5); letter-spacing: 0.5px;">✓ LOGGED IN AS: <span id="usernameDisplay" style="text-transform: uppercase;"></span></div>
-        <button onclick="handleLogout()" class="modern-btn btn-danger w-full" style="margin-top: 12px; height: 36px; font-size: 11px;">
+    <div id="userStatus" style="display: none; margin-bottom: 14px; padding: 10px 12px; background: rgba(201,169,110,0.06); border: 1px solid rgba(201,169,110,0.2);">
+        <div style="font-size: 10px; font-weight: 700; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase;">✓ <span id="usernameDisplay"></span></div>
+        <button onclick="handleLogout()" class="modern-btn btn-danger w-full" style="margin-top: 8px; height: 28px; font-size: 10px;">
             <i class="fas fa-sign-out-alt"></i> Logout
         </button>
     </div>
     
     <!-- Room Type Badge -->
-    <div id="roomTypeBadge" style="display:none; margin-bottom:16px; padding:10px 14px; background:linear-gradient(135deg,rgba(132,204,22,0.15),rgba(132,204,22,0.05)); border-radius:10px; border:1.5px solid rgba(132,204,22,0.4); display:flex; align-items:center; justify-content:space-between;">
-        <div style="font-size:12px; font-weight:700; color:#4d7c0f;">
-            <span id="roomTypeBadgeIcon" style="margin-right:6px;"></span>
+    <div id="roomTypeBadge" style="display:none; margin-bottom:12px; padding:8px 12px; background:rgba(201,169,110,0.06); border:1px solid rgba(201,169,110,0.2); display:flex; align-items:center; justify-content:space-between;">
+        <div style="font-size:10px; font-weight:600; color:var(--accent); letter-spacing:1px; text-transform:uppercase;">
+            <span id="roomTypeBadgeIcon" style="margin-right:5px;"></span>
             <span id="roomTypeBadgeLabel"></span>
         </div>
-        <button onclick="goToStep2(); document.getElementById('startModal').classList.add('show'); document.getElementById('startModal').classList.remove('hidden');" style="background:none;border:none;font-size:10px;color:#84cc16;cursor:pointer;font-weight:600;">Change</button>
+        <button onclick="goToStep2(); document.getElementById('startModal').classList.add('show'); document.getElementById('startModal').classList.remove('hidden');" style="background:none;border:none;font-size:10px;color:var(--accent);cursor:pointer;font-weight:600;letter-spacing:1px;text-transform:uppercase;">Change</button>
     </div>
 
     <!-- Room Size Section -->
@@ -852,7 +525,7 @@
     <hr class="section-divider">
     
     <!-- Furniture Section -->
-    <div style="margin-bottom: 16px;">
+    <div style="margin-bottom: 12px;">
         <div class="section-header" onclick="toggleSection('furniture')">
             <h2 class="label-text" style="margin-bottom: 0;">
                 <i class="fas fa-couch label-icon"></i>
@@ -861,49 +534,17 @@
             <span class="collapse-arrow" id="furnitureArrow">▼</span>
         </div>
         <div class="section-content expanded" id="furnitureContent">
-            <select id="furnitureSelect" class="w-full" style="margin-top: 8px; margin-bottom: 10px;">
-                <option value="">Choose Furniture</option>
-            </select>
-            
-            <button onclick="addSelectedFurniture()" class="modern-btn btn-primary text-white w-full" style="margin-bottom: 8px;">
-                <i class="fas fa-plus"></i> Add to Scene
-            </button>
-            
-            <button onclick="rotateSelected()" class="modern-btn w-full" style="margin-bottom: 8px;">
-                <i class="fas fa-rotate-right"></i> Rotate Selected
-            </button>
-
-            <!-- Move Up / Down -->
-            <div class="button-row" style="margin-bottom: 8px;">
-                <button onclick="moveSelectedY(0.1)" class="modern-btn flex-1" title="Move up (Q key)">
-                    <i class="fas fa-arrow-up"></i> Move Up
-                </button>
-                <button onclick="moveSelectedY(-0.1)" class="modern-btn flex-1" title="Move down (E key)">
-                    <i class="fas fa-arrow-down"></i> Move Down
-                </button>
-            </div>
-
-            <!-- Scale Selected Furniture -->
-            <div id="scaleControls" style="margin-top: 4px;">
-                <div class="room-size-label" style="margin-bottom: 6px;">Scale Selected Item</div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <button onclick="scaleSelected(-0.1)" class="modern-btn" style="width:38px; height:38px; flex-shrink:0; font-size:18px; font-weight:700;">−</button>
-                    <input type="range" id="scaleSlider" min="0.2" max="3" step="0.05" value="1"
-                        oninput="applyScaleFromSlider(this.value)"
-                        style="flex:1; height:6px; accent-color:#84cc16; cursor:pointer;">
-                    <button onclick="scaleSelected(0.1)" class="modern-btn" style="width:38px; height:38px; flex-shrink:0; font-size:18px; font-weight:700;">+</button>
-                </div>
-                <div style="text-align:center; font-size:10px; color:#64748b; margin-top:4px;">
-                    Size: <span id="scaleValue">1.0x</span>
-                </div>
-            </div>
+            <!-- hidden select kept for compatibility -->
+            <select id="furnitureSelect" style="display:none;"></select>
+            <!-- Categorized furniture list — scrollable -->
+            <div id="furnCategoryList" style="margin-top:6px; max-height:260px; overflow-y:auto; padding-right:2px;"></div>
         </div>
     </div>
     
     <hr class="section-divider">
     
     <!-- Materials Section -->
-    <div style="margin-bottom: 16px;">
+    <div style="margin-bottom: 12px;">
         <div class="section-header" onclick="toggleSection('materials')">
             <h2 class="label-text" style="margin-bottom: 0;">
                 <i class="fas fa-palette label-icon"></i>
@@ -940,70 +581,33 @@
         </div>
     </div>
     
-    <hr class="section-divider">
-    
-    <!-- Tools Section -->
-    <div style="margin-bottom: 16px;">
-        <div class="section-header" onclick="toggleSection('tools')">
-            <h2 class="label-text" style="margin-bottom: 0;">
-                <i class="fas fa-wrench label-icon"></i>
-                Tools
-            </h2>
-            <span class="collapse-arrow" id="toolsArrow">▼</span>
-        </div>
-        <div class="section-content expanded" id="toolsContent">
-            <div class="button-row" style="margin-top: 8px;">
-                <button onclick="toggleWalls()" class="modern-btn flex-1">
-                    <i class="fas fa-building"></i> Walls
-                </button>
-                <button onclick="toggleGrid()" class="modern-btn flex-1">
-                    <i class="fas fa-border-all"></i> Grid
-                </button>
-            </div>
-            
-            <button onclick="toggleRoof()" class="modern-btn w-full" style="margin-bottom: 8px;">
-                <i class="fas fa-home"></i> Toggle Roof
-            </button>
-            
-            <button id="walkModeBtn" onclick="toggleWalkMode()" class="modern-btn btn-primary w-full" style="margin-bottom: 8px; background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%) !important;">
-                <i class="fas fa-walking"></i> 🚶 Walk Mode
-            </button>
-            
-            <div class="button-row">
-                <button onclick="saveDesign()" class="modern-btn btn-primary flex-1">
-                    <i class="fas fa-save"></i> Save
-                </button>
-                <button onclick="loadDesign()" class="modern-btn flex-1">
-                    <i class="fas fa-folder-open"></i> Load
-                </button>
-            </div>
-            
-            <button onclick="deleteSelected()" class="modern-btn btn-danger w-full" style="margin-bottom: 8px;">
-                <i class="fas fa-trash"></i> Delete Selected
-            </button>
-            
-            <div class="button-row">
-                <button onclick="undoAction()" class="modern-btn flex-1">
-                    <i class="fas fa-undo"></i> Undo
-                </button>
-                <button onclick="redoAction()" class="modern-btn flex-1">
-                    <i class="fas fa-redo"></i> Redo
-                </button>
-            </div>
-            
-            <div class="button-row">
-                <button onclick="resetCamera()" class="modern-btn flex-1">
-                    <i class="fas fa-video"></i> Reset
-                </button>
-                <button onclick="topView()" class="modern-btn flex-1">
-                    <i class="fas fa-eye"></i> Top
-                </button>
-            </div>
-            
-            <button onclick="captureScreenshot()" class="modern-btn w-full" style="margin-bottom: 0;">
-                <i class="fas fa-camera"></i> Export Image
-            </button>
-        </div>
+</div>
+
+<!-- Top Toolbar -->
+<div class="top-toolbar">
+    <button class="toolbar-btn" onclick="undoAction()" title="Undo"><i class="fas fa-undo"></i> Undo</button>
+    <button class="toolbar-btn" onclick="redoAction()" title="Redo"><i class="fas fa-redo"></i> Redo</button>
+    <div class="toolbar-sep"></div>
+    <button class="toolbar-btn" onclick="toggleWalls()"><i class="fas fa-border-outer"></i> Walls</button>
+    <button class="toolbar-btn" onclick="toggleRoof()"><i class="fas fa-home"></i> Roof</button>
+    <button class="toolbar-btn" onclick="toggleGrid()"><i class="fas fa-border-all"></i> Grid</button>
+    <div class="toolbar-sep"></div>
+    <button class="toolbar-btn" onclick="resetCamera()"><i class="fas fa-video"></i> Reset View</button>
+    <button class="toolbar-btn" onclick="topView()"><i class="fas fa-eye"></i> Top View</button>
+    <div class="toolbar-sep"></div>
+    <button id="walkModeBtn" class="toolbar-btn" onclick="toggleWalkMode()"><i class="fas fa-walking"></i> Walk Mode</button>
+    <div class="toolbar-sep"></div>
+    <button class="toolbar-btn" onclick="captureScreenshot()"><i class="fas fa-camera"></i> Export</button>
+    <div class="toolbar-sep"></div>
+    <button class="toolbar-btn btn-primary" style="padding:0 16px;" onclick="saveDesign()"><i class="fas fa-save"></i> Save</button>
+    <button class="toolbar-btn" onclick="manageDesigns()"><i class="fas fa-folder-open"></i> Load</button>
+</div>
+
+<!-- Right Properties Panel -->
+<div class="props-panel" id="propsPanel">
+    <div style="font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">Properties</div>
+    <div id="propsContent">
+        <div class="props-empty">Select a furniture item to see its properties</div>
     </div>
 </div>
 
@@ -1132,7 +736,8 @@ const ROOM_CATEGORIES = {
         label: 'Home',
         icon: '🏠',
         rooms: [
-            { id: 'bedroom',    label: 'Bedroom',     icon: '🛏️' },
+            { id: 'fullhome',   label: 'Full Home',    icon: '🏡' },
+            { id: 'bedroom',    label: 'Bedroom',      icon: '🛏️' },
             { id: 'livingroom', label: 'Living Room',  icon: '🛋️' },
             { id: 'kitchen',    label: 'Kitchen',      icon: '🍳' },
             { id: 'bathroom',   label: 'Bathroom',     icon: '🚿' },
@@ -1169,25 +774,27 @@ const ROOM_CATEGORIES = {
 
 // Furniture available per room type (value → label)
 const ROOM_FURNITURE = {
-    bedroom:     [['bed','🛏️ Bed'],['wardrobe','👔 Wardrobe'],['nightstand','🕯️ Nightstand'],['dresser','💄 Dresser'],['lamp','💡 Lamp'],['armchair','🪑 Armchair'],['mirror','🪞 Mirror'],['curtain','🪟 Curtain'],['rug','🟥 Rug'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['straightstairs','🪜 Straight Staircase'],['spiralstairs','🌀 Spiral Staircase']],
-    livingroom:  [['sofa','🛋️ Sofa'],['armchair','🪑 Armchair'],['coffeetable','☕ Coffee Table'],['tvstand','📺 TV Stand'],['bookshelf','📚 Bookshelf'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['mirror','🪞 Mirror'],['rug','🟥 Rug'],['curtain','🪟 Curtain'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall']],
-    kitchen:     [['table','🪑 Dining Table'],['diningchair','🍽️ Dining Chair'],['cabinet','🗄️ Cabinet'],['kitchencounter','🍳 Kitchen Counter'],['kitchenisland','🏝️ Kitchen Island'],['fridge','🧊 Fridge'],['stove','🔥 Stove'],['lamp','💡 Lamp'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window']],
-    bathroom:    [['bathtub','🛁 Bathtub'],['toilet','🚽 Toilet'],['sink','🚿 Sink'],['cabinet','🗄️ Cabinet'],['mirror','🪞 Mirror'],['lamp','💡 Lamp'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window']],
-    workstation: [['desk','🖥️ Desk'],['chair','💺 Chair'],['bookshelf','📚 Bookshelf'],['cabinet','🗄️ Cabinet'],['filingcabinet','🗂️ Filing Cabinet'],['whiteboard','📋 Whiteboard'],['lamp','💡 Lamp'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall']],
-    conference:  [['table','🪑 Conference Table'],['chair','💺 Chair'],['diningchair','🍽️ Side Chair'],['bookshelf','📚 Bookshelf'],['whiteboard','📋 Whiteboard'],['lamp','💡 Lamp'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['glasswall','🔲 Glass Wall']],
-    reception:   [['sofa','🛋️ Sofa'],['armchair','🪑 Armchair'],['coffeetable','☕ Coffee Table'],['desk','🖥️ Desk'],['chair','💺 Chair'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['plantpot','🪴 Plant'],['mirror','🪞 Mirror'],['officepartition','🔲 Office Partition'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['glasswall','🔲 Glass Wall'],['straightstairs','🪜 Staircase']],
-    restaurant:  [['table','🪑 Dining Table'],['diningchair','🍽️ Dining Chair'],['armchair','🪑 Armchair'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['mirror','🪞 Mirror'],['plantpot','🪴 Plant'],['rug','🟥 Rug'],['curtain','🪟 Curtain'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall']],
-    cafe:        [['coffeetable','☕ Coffee Table'],['armchair','🪑 Armchair'],['diningchair','🍽️ Chair'],['table','🪑 Table'],['lamp','💡 Lamp'],['displayshelf','🏪 Display Shelf'],['plantpot','🪴 Plant'],['mirror','🪞 Mirror'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window']],
-    shop:        [['displayshelf','🏪 Display Shelf'],['cashcounter','💰 Cash Counter'],['cabinet','🗄️ Display Cabinet'],['desk','🖥️ Counter Desk'],['chair','💺 Chair'],['lamp','💡 Lamp'],['mirror','🪞 Mirror'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall']],
-    classroom:   [['desk','🖥️ Student Desk'],['chair','💺 Chair'],['table','🪑 Teacher Table'],['bookshelf','📚 Bookshelf'],['cabinet','🗄️ Cabinet'],['whiteboard','📋 Whiteboard'],['lamp','💡 Lamp'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window']],
-    gym:         [['lamp','💡 Lamp'],['cabinet','🗄️ Locker'],['mirror','🪞 Mirror'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall'],['straightstairs','🪜 Staircase']],
-    library:     [['bookshelf','📚 Bookshelf'],['displayshelf','🏪 Display Shelf'],['table','🪑 Reading Table'],['chair','💺 Chair'],['armchair','🪑 Armchair'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window']],
+    fullhome:    [['bed','🛏️ Bed'],['sofa','🛋️ Sofa'],['armchair','🪑 Armchair'],['coffeetable','☕ Coffee Table'],['tvstand','📺 TV Stand'],['table','🪑 Dining Table'],['diningchair','🍽️ Dining Chair'],['wardrobe','👔 Wardrobe'],['nightstand','🕯️ Nightstand'],['dresser','💄 Dresser'],['bookshelf','📚 Bookshelf'],['cabinet','🗄️ Cabinet'],['desk','🖥️ Desk'],['chair','💺 Chair'],['lamp','💡 Lamp'],['mirror','🪞 Mirror'],['curtain','🪟 Curtain'],['rug','🟥 Rug'],['plantpot','🪴 Plant'],['kitchencounter','🍳 Kitchen Counter'],['kitchenisland','🏝️ Kitchen Island'],['fridge','🧊 Fridge'],['stove','🔥 Stove'],['bathtub','🛁 Bathtub'],['toilet','🚽 Toilet'],['sink','🚿 Sink'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall'],['straightstairs','🪜 Straight Staircase'],['spiralstairs','🌀 Spiral Staircase'],['ceilingfan','🌀 Ceiling Fan'],['chandelier','✨ Chandelier'],['pendantlight','💡 Pendant Light'],['ac','❄️ AC Unit']],
+    bedroom:     [['bed','🛏️ Bed'],['wardrobe','👔 Wardrobe'],['nightstand','🕯️ Nightstand'],['dresser','💄 Dresser'],['lamp','💡 Lamp'],['armchair','🪑 Armchair'],['mirror','🪞 Mirror'],['curtain','🪟 Curtain'],['rug','🟥 Rug'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['straightstairs','🪜 Straight Staircase'],['spiralstairs','🌀 Spiral Staircase'],['ceilingfan','🌀 Ceiling Fan'],['ac','❄️ AC Unit']],
+    livingroom:  [['sofa','🛋️ Sofa'],['armchair','🪑 Armchair'],['coffeetable','☕ Coffee Table'],['tvstand','📺 TV Stand'],['bookshelf','📚 Bookshelf'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['mirror','🪞 Mirror'],['rug','🟥 Rug'],['curtain','🪟 Curtain'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall'],['ceilingfan','🌀 Ceiling Fan'],['chandelier','✨ Chandelier'],['ac','❄️ AC Unit']],
+    kitchen:     [['table','🪑 Dining Table'],['diningchair','🍽️ Dining Chair'],['cabinet','🗄️ Cabinet'],['kitchencounter','🍳 Kitchen Counter'],['kitchenisland','🏝️ Kitchen Island'],['fridge','🧊 Fridge'],['stove','🔥 Stove'],['lamp','💡 Lamp'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['ceilingfan','🌀 Ceiling Fan'],['pendantlight','💡 Pendant Light'],['ac','❄️ AC Unit']],
+    bathroom:    [['bathtub','🛁 Bathtub'],['toilet','🚽 Toilet'],['sink','🚿 Sink'],['cabinet','🗄️ Cabinet'],['mirror','🪞 Mirror'],['lamp','💡 Lamp'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['spotlight','🔦 Spotlight']],
+    workstation: [['desk','🖥️ Desk'],['chair','💺 Chair'],['bookshelf','📚 Bookshelf'],['cabinet','🗄️ Cabinet'],['filingcabinet','🗂️ Filing Cabinet'],['whiteboard','📋 Whiteboard'],['lamp','💡 Lamp'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall'],['ceilingfan','🌀 Ceiling Fan'],['pendantlight','💡 Pendant Light'],['ac','❄️ AC Unit']],
+    conference:  [['table','🪑 Conference Table'],['chair','💺 Chair'],['diningchair','🍽️ Side Chair'],['bookshelf','📚 Bookshelf'],['whiteboard','📋 Whiteboard'],['lamp','💡 Lamp'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['glasswall','🔲 Glass Wall'],['pendantlight','💡 Pendant Light'],['spotlight','🔦 Spotlight'],['ac','❄️ AC Unit']],
+    reception:   [['sofa','🛋️ Sofa'],['armchair','🪑 Armchair'],['coffeetable','☕ Coffee Table'],['desk','🖥️ Desk'],['chair','💺 Chair'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['plantpot','🪴 Plant'],['mirror','🪞 Mirror'],['officepartition','🔲 Office Partition'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['glasswall','🔲 Glass Wall'],['straightstairs','🪜 Staircase'],['chandelier','✨ Chandelier'],['spotlight','🔦 Spotlight'],['ac','❄️ AC Unit']],
+    restaurant:  [['table','🪑 Dining Table'],['diningchair','🍽️ Dining Chair'],['armchair','🪑 Armchair'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['mirror','🪞 Mirror'],['plantpot','🪴 Plant'],['rug','🟥 Rug'],['curtain','🪟 Curtain'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall'],['chandelier','✨ Chandelier'],['pendantlight','💡 Pendant Light'],['ceilingfan','🌀 Ceiling Fan'],['ac','❄️ AC Unit']],
+    cafe:        [['coffeetable','☕ Coffee Table'],['armchair','🪑 Armchair'],['diningchair','🍽️ Chair'],['table','🪑 Table'],['lamp','💡 Lamp'],['displayshelf','🏪 Display Shelf'],['plantpot','🪴 Plant'],['mirror','🪞 Mirror'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['pendantlight','💡 Pendant Light'],['ceilingfan','🌀 Ceiling Fan'],['ac','❄️ AC Unit']],
+    shop:        [['displayshelf','🏪 Display Shelf'],['cashcounter','💰 Cash Counter'],['cabinet','🗄️ Display Cabinet'],['desk','🖥️ Counter Desk'],['chair','💺 Chair'],['lamp','💡 Lamp'],['mirror','🪞 Mirror'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall'],['spotlight','🔦 Spotlight'],['pendantlight','💡 Pendant Light'],['ac','❄️ AC Unit']],
+    classroom:   [['desk','🖥️ Student Desk'],['chair','💺 Chair'],['table','🪑 Teacher Table'],['bookshelf','📚 Bookshelf'],['cabinet','🗄️ Cabinet'],['whiteboard','📋 Whiteboard'],['lamp','💡 Lamp'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['ceilingfan','🌀 Ceiling Fan'],['spotlight','🔦 Spotlight'],['ac','❄️ AC Unit']],
+    gym:         [['lamp','💡 Lamp'],['cabinet','🗄️ Locker'],['mirror','🪞 Mirror'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall'],['straightstairs','🪜 Staircase'],['spotlight','🔦 Spotlight'],['ac','❄️ AC Unit']],
+    library:     [['bookshelf','📚 Bookshelf'],['displayshelf','🏪 Display Shelf'],['table','🪑 Reading Table'],['chair','💺 Chair'],['armchair','🪑 Armchair'],['lamp','💡 Lamp'],['cabinet','🗄️ Cabinet'],['plantpot','🪴 Plant'],['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],['windowwall','🪟 Wall with Window'],['chandelier','✨ Chandelier'],['spotlight','🔦 Spotlight'],['ac','❄️ AC Unit']],
 };
 
 // Default room settings per type
 // wall = paint color, floor = flooring material color, roof = ceiling color
 const ROOM_DEFAULTS = {
     // HOME
+    fullhome:    { width:24, length:20, height:3.2, wall:'#f2ede8', floor:'#c8b89a', roof:'#f8f6f2', wallStyle:'plain' },
     bedroom:     { width:12, length:10, height:3,   wall:'#f0e8df', floor:'#b89a72', roof:'#faf7f4', wallStyle:'plain' },
     livingroom:  { width:16, length:14, height:3,   wall:'#e8e0d8', floor:'#8b6f47', roof:'#f5f2ee', wallStyle:'plain' },
     kitchen:     { width:10, length:8,  height:3,   wall:'#f5f5f0', floor:'#c8c0b0', roof:'#ffffff', wallStyle:'tile' },
@@ -1230,6 +837,8 @@ function selectCategory(cat) {
     selectedCategory = cat;
     const catData = ROOM_CATEGORIES[cat];
     document.getElementById('step3Title').textContent = `Choose ${catData.label} Room Type`;
+    const eyebrow = document.getElementById('step3EyebrowText');
+    if (eyebrow) eyebrow.textContent = catData.label;
 
     // Build room type cards
     const grid = document.getElementById('roomTypeGrid');
@@ -1283,16 +892,59 @@ function applyRoomType(cat, room) {
     localStorage.setItem('currentRoomType', JSON.stringify({ cat, room }));
 }
 
+// Furniture categories for the panel
+const FURN_CATEGORIES = [
+    { label: 'Seating',    items: [['sofa','🛋️','Sofa'],['armchair','🪑','Armchair'],['chair','💺','Chair'],['diningchair','🍽️','Dining Chair']] },
+    { label: 'Beds',       items: [['bed','🛏️','Bed'],['nightstand','🕯️','Nightstand']] },
+    { label: 'Tables',     items: [['table','🪑','Dining Table'],['coffeetable','☕','Coffee Table'],['desk','🖥️','Desk']] },
+    { label: 'Storage',    items: [['cabinet','🗄️','Cabinet'],['bookshelf','📚','Bookshelf'],['wardrobe','👔','Wardrobe'],['dresser','💄','Dresser'],['filingcabinet','🗂️','Filing Cabinet'],['displayshelf','🏪','Display Shelf'],['tvstand','📺','TV Stand']] },
+    { label: 'Kitchen',    items: [['kitchencounter','🍳','Counter'],['kitchenisland','🏝️','Island'],['fridge','🧊','Fridge'],['stove','🔥','Stove']] },
+    { label: 'Bathroom',   items: [['bathtub','🛁','Bathtub'],['toilet','🚽','Toilet'],['sink','🚿','Sink']] },
+    { label: 'Office',     items: [['whiteboard','📋','Whiteboard'],['officepartition','🔲','Partition'],['cashcounter','💰','Cash Counter']] },
+    { label: 'Decor',      items: [['lamp','💡','Lamp'],['plantpot','🪴','Plant'],['rug','🟥','Rug'],['curtain','🪟','Curtain'],['mirror','🪞','Mirror']] },
+    { label: 'Ceiling',    items: [['ceilingfan','🌀','Ceiling Fan'],['chandelier','✨','Chandelier'],['pendantlight','💡','Pendant Light'],['spotlight','🔦','Spotlight'],['ac','❄️','AC Unit']] },
+    { label: 'Walls',      items: [['interiorwall','🧱','Interior Wall'],['doorwall','🚪','Door Wall'],['windowwall','🪟','Window Wall'],['glasswall','🔲','Glass Wall']] },
+    { label: 'Stairs',     items: [['straightstairs','🪜','Straight'],['lshapedstairs','🔄','L-Shaped'],['ushapedstairs','🔃','U-Shaped'],['spiralstairs','🌀','Spiral']] },
+];
+
+function buildFurnCategoryList(items) {
+    const container = document.getElementById('furnCategoryList');
+    if (!container) return;
+
+    // Group items by category
+    const itemSet = items ? new Set(items.map(([v]) => v)) : null;
+
+    container.innerHTML = '';
+    FURN_CATEGORIES.forEach(cat => {
+        const filtered = itemSet ? cat.items.filter(([v]) => itemSet.has(v)) : cat.items;
+        if (!filtered.length) return;
+
+        const catEl = document.createElement('div');
+        catEl.className = 'furn-category';
+        catEl.textContent = cat.label;
+        container.appendChild(catEl);
+
+        filtered.forEach(([val, icon, name]) => {
+            const el = document.createElement('div');
+            el.className = 'furn-item';
+            el.innerHTML = `<span class="furn-item-icon">${icon}</span><span class="furn-item-name">${name}</span>`;
+            el.onclick = () => { if (window.addFurniture) window.addFurniture(val); };
+            container.appendChild(el);
+        });
+    });
+}
+
 function populateFurnitureDropdown(roomId) {
     const select = document.getElementById('furnitureSelect');
     const items  = ROOM_FURNITURE[roomId] || getAllFurniture();
     select.innerHTML = '<option value="">Choose Furniture</option>';
     items.forEach(([val, label]) => {
         const opt = document.createElement('option');
-        opt.value = val;
-        opt.textContent = label;
+        opt.value = val; opt.textContent = label;
         select.appendChild(opt);
     });
+    // Also build the visual list
+    buildFurnCategoryList(roomId ? items : null);
 }
 
 function getAllFurniture() {
@@ -1308,6 +960,7 @@ function getAllFurniture() {
         ['officepartition','🔲 Office Partition'],['whiteboard','📋 Whiteboard'],['filingcabinet','🗂️ Filing Cabinet'],
         ['displayshelf','🏪 Display Shelf'],['cashcounter','💰 Cash Counter'],
         ['plantpot','🪴 Plant'],['rug','🟥 Rug'],['curtain','🪟 Curtain'],['mirror','🪞 Mirror'],
+        ['ceilingfan','🌀 Ceiling Fan'],['chandelier','✨ Chandelier'],['pendantlight','💡 Pendant Light'],['spotlight','🔦 Spotlight'],['ac','❄️ AC Unit'],
         ['interiorwall','🧱 Interior Wall'],['doorwall','🚪 Wall with Door'],
         ['windowwall','🪟 Wall with Window'],['glasswall','🔲 Glass Wall'],
         ['straightstairs','🪜 Straight Staircase'],['lshapedstairs','🔄 L-Shaped Stairs'],
@@ -1390,18 +1043,18 @@ function toggleSection(sectionName) {
 }
 </script>
 <!-- Designs Manager Modal -->
-<div id="designsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)closeDesignsModal()">
-  <div style="background:#fff;border-radius:14px;width:520px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+<div id="designsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)closeDesignsModal()">
+  <div style="background:#141210;border:1px solid #2e2a25;width:520px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 40px 80px rgba(0,0,0,0.6);overflow:hidden;">
     <!-- Header -->
-    <div style="padding:18px 22px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid #2e2a25;display:flex;align-items:center;justify-content:space-between;">
       <div>
-        <div style="font-size:15px;font-weight:700;color:#111;">Saved Designs</div>
-        <div id="designsSubtitle" style="font-size:12px;color:#6b7280;margin-top:2px;"></div>
+        <div style="font-size:11px;font-weight:700;color:#f0ece4;text-transform:uppercase;letter-spacing:2px;">Saved Designs</div>
+        <div id="designsSubtitle" style="font-size:11px;color:#5a5248;margin-top:4px;letter-spacing:0.3px;"></div>
       </div>
-      <button onclick="closeDesignsModal()" style="background:none;border:none;font-size:22px;color:#9ca3af;cursor:pointer;line-height:1;padding:0 4px;">&times;</button>
+      <button onclick="closeDesignsModal()" style="background:none;border:none;font-size:20px;color:#5a5248;cursor:pointer;line-height:1;padding:0 4px;transition:color 0.2s;" onmouseover="this.style.color='#c9a96e'" onmouseout="this.style.color='#5a5248'">&times;</button>
     </div>
     <!-- List -->
-    <div id="designsList" style="overflow-y:auto;flex:1;padding:10px 12px;"></div>
+    <div id="designsList" style="overflow-y:auto;flex:1;padding:12px 16px;"></div>
   </div>
 </div>
 

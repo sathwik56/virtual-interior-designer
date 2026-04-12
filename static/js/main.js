@@ -121,7 +121,14 @@ function init() {
     camera.position.set(12, 10, 12);
 
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("canvas"), antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    const SIDEBAR_W = 280, TOOLBAR_H = 44, PROPS_W = 220;
+    const vw = window.innerWidth - SIDEBAR_W - PROPS_W;
+    const vh = window.innerHeight - TOOLBAR_H;
+    renderer.setSize(vw, vh);
+    renderer.domElement.style.position = 'fixed';
+    renderer.domElement.style.left = SIDEBAR_W + 'px';
+    renderer.domElement.style.top = TOOLBAR_H + 'px';
+    camera.aspect = vw / vh;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -240,9 +247,11 @@ function init() {
     scene.add(roof);
 
     window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
+        const vw = window.innerWidth - 280 - 220;
+        const vh = window.innerHeight - 44;
+        camera.aspect = vw / vh;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(vw, vh);
     });
 }
 
@@ -1252,9 +1261,208 @@ function createFurniture(type) {
         }
     }
     
-    // Set position for furniture (not demo)
-    const spawnY = (type === 'windowwall') ? 0.9 : 0;
-    group.position.set((Math.random() - 0.5) * 10, spawnY, (Math.random() - 0.5) * 10);
+    // ── CEILING FAN ──────────────────────────────────────────────────────────
+    else if (type === 'ceilingfan') {
+        const metalMat = M(0x888888, 0.2, 0.8);
+        const bladeMat = M(0xd4a96a, 0.5);
+        const glassMat = M(0xfff8e0, 0.05, 0.0, { transparent:true, opacity:0.9, emissive:0xfff8c0, emissiveIntensity:1.2 });
+
+        // Ceiling canopy (flat disc)
+        add(cyl(0.1, 0.1, 0.04, metalMat, 24), 0, -0.02, 0);
+        // Down rod
+        add(cyl(0.016, 0.016, 0.28, metalMat), 0, -0.2, 0);
+        // Motor housing — wider, flatter, more realistic
+        add(cyl(0.16, 0.14, 0.1, metalMat, 32), 0, -0.39, 0);
+        add(cyl(0.1, 0.1, 0.04, metalMat, 24), 0, -0.46, 0);
+        // Light kit bowl (hemisphere)
+        const bowlGeo = new THREE.SphereGeometry(0.1, 20, 10, 0, Math.PI*2, 0, Math.PI*0.55);
+        const bowl = new THREE.Mesh(bowlGeo, glassMat);
+        bowl.rotation.x = Math.PI; bowl.position.set(0, -0.52, 0);
+        group.add(bowl);
+        // Bulb inside bowl
+        add(sph(0.04, M(0xfffde0, 0.05, 0, { emissive:0xfff8a0, emissiveIntensity:2.0 }), 10), 0, -0.5, 0);
+
+        // 5 blades — tapered shape using custom geometry
+        for (let i = 0; i < 5; i++) {
+            const angle = (i / 5) * Math.PI * 2;
+            // Blade: wide at tip, narrow at root — use scaled box with taper via vertices
+            const bladeShape = new THREE.Shape();
+            bladeShape.moveTo(-0.07, 0);
+            bladeShape.lineTo(-0.04, 0.52);
+            bladeShape.lineTo(0.04, 0.52);
+            bladeShape.lineTo(0.07, 0);
+            bladeShape.closePath();
+            const bladeGeo = new THREE.ShapeGeometry(bladeShape);
+            const blade = new THREE.Mesh(bladeGeo, bladeMat);
+            blade.rotation.x = -Math.PI / 2 + 0.08; // slight pitch
+            blade.rotation.z = angle;
+            blade.position.set(Math.cos(angle)*0.22, -0.4, Math.sin(angle)*0.22);
+            group.add(blade);
+            // Back face
+            const bladeBack = blade.clone();
+            bladeBack.material = M(0xb8904a, 0.6);
+            bladeBack.rotation.x = Math.PI / 2 - 0.08;
+            bladeBack.rotation.z = angle;
+            bladeBack.position.copy(blade.position);
+            group.add(bladeBack);
+            // Blade bracket (metal arm from motor to blade root)
+            const bkt = box(0.18, 0.012, 0.022, metalMat);
+            bkt.position.set(Math.cos(angle)*0.1, -0.41, Math.sin(angle)*0.1);
+            bkt.rotation.y = angle; group.add(bkt);
+        }
+    }
+
+    // ── CHANDELIER ───────────────────────────────────────────────────────────
+    else if (type === 'chandelier') {
+        const brassMat  = M(0xd4a017, 0.2, 0.9);
+        const crystalMat= M(0xe8f4ff, 0.02, 0.1, { transparent:true, opacity:0.8, emissive:0xfff8e0, emissiveIntensity:0.8 });
+        const bulbMat   = M(0xfffde0, 0.05, 0.0, { emissive:0xfff8a0, emissiveIntensity:2.5 });
+
+        // Ceiling rose
+        add(cyl(0.1, 0.1, 0.05, brassMat, 20), 0, -0.025, 0);
+        // Main chain rod
+        add(cyl(0.012, 0.012, 0.5, brassMat), 0, -0.28, 0);
+        // Central crown
+        add(cyl(0.18, 0.12, 0.1, brassMat, 20), 0, -0.58, 0);
+        // Lower cup
+        add(cyl(0.08, 0.14, 0.08, brassMat, 20), 0, -0.68, 0);
+
+        // 6 arms with candle cups and bulbs
+        for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2;
+            const cx = Math.cos(a) * 0.32, cz = Math.sin(a) * 0.32;
+            // Curved arm (approximated as angled box)
+            const arm = box(0.34, 0.018, 0.018, brassMat);
+            arm.position.set(Math.cos(a)*0.17, -0.62, Math.sin(a)*0.17);
+            arm.rotation.y = a; arm.rotation.z = 0.22;
+            group.add(arm);
+            // Candle cup
+            add(cyl(0.03, 0.025, 0.06, brassMat, 12), cx, -0.52, cz);
+            // Bulb
+            add(sph(0.035, bulbMat, 10), cx, -0.47, cz);
+            // Crystal drops (3 per arm)
+            for (let d = 0; d < 3; d++) {
+                const dx = cx + Math.cos(a + (d-1)*0.3)*0.04;
+                const dz = cz + Math.sin(a + (d-1)*0.3)*0.04;
+                const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.025), crystalMat);
+                crystal.position.set(dx, -0.62 - d*0.06, dz);
+                group.add(crystal);
+            }
+        }
+        // Bottom crystal cluster
+        for (let i = 0; i < 8; i++) {
+            const a = (i/8)*Math.PI*2, r = 0.06 + (i%2)*0.04;
+            const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.022), crystalMat);
+            crystal.position.set(Math.cos(a)*r, -0.76 - (i%3)*0.05, Math.sin(a)*r);
+            group.add(crystal);
+        }
+    }
+
+    // ── PENDANT LIGHT ────────────────────────────────────────────────────────
+    else if (type === 'pendantlight') {
+        const cordMat  = M(0x1a1a1a, 0.9);
+        const shadeMat = M(0x2c2c2c, 0.4, 0.5);
+        const innerMat = M(0xfff8e0, 0.1, 0.0, { emissive:0xfff8a0, emissiveIntensity:2.5 });
+        const ceilingMat = M(0x888888, 0.3, 0.6);
+
+        // Ceiling canopy
+        add(cyl(0.07, 0.07, 0.03, ceilingMat, 16), 0, -0.015, 0);
+        // Cord
+        add(cyl(0.006, 0.006, 0.55, cordMat), 0, -0.3, 0);
+        // Shade — wide industrial cone
+        const shadeGeo = new THREE.CylinderGeometry(0.22, 0.08, 0.2, 24, 1, true);
+        const shade = new THREE.Mesh(shadeGeo, shadeMat);
+        shade.position.set(0, -0.65, 0);
+        group.add(shade);
+        // Shade top cap
+        add(cyl(0.08, 0.08, 0.015, shadeMat, 16), 0, -0.555, 0);
+        // Bulb inside
+        add(sph(0.055, innerMat, 12), 0, -0.63, 0);
+        // Shade inner rim glow
+        const rimGeo = new THREE.CylinderGeometry(0.215, 0.215, 0.01, 24);
+        const rim = new THREE.Mesh(rimGeo, M(0xfff5a0, 0.1, 0, { emissive:0xfff5a0, emissiveIntensity:0.5 }));
+        rim.position.set(0, -0.745, 0);
+        group.add(rim);
+    }
+
+    // ── RECESSED SPOTLIGHT ───────────────────────────────────────────────────
+    else if (type === 'spotlight') {
+        // Dark housing so it's visible on white ceiling, bright bulb visible on dark
+        const housingMat = M(0x2a2a2a, 0.3, 0.6);   // dark grey — visible on white
+        const trimMat    = M(0x1a1a1a, 0.2, 0.7);   // near-black trim ring
+        const reflMat    = M(0xc8c8c8, 0.05, 0.95); // polished reflector
+        const bulbMat    = M(0xfffde0, 0.02, 0.0, { emissive:0xfff8c0, emissiveIntensity:4.0 }); // very bright
+
+        // Outer trim ring (dark, visible on any background)
+        add(cyl(0.1, 0.1, 0.014, trimMat, 24), 0, -0.007, 0);
+        // Housing cylinder
+        add(cyl(0.078, 0.078, 0.07, housingMat, 20), 0, -0.042, 0);
+        // Inner reflector cone
+        const reflGeo = new THREE.CylinderGeometry(0.062, 0.02, 0.06, 20, 1, true);
+        const refl = new THREE.Mesh(reflGeo, reflMat);
+        refl.position.set(0, -0.04, 0);
+        group.add(refl);
+        // Bright bulb
+        add(sph(0.025, bulbMat, 10), 0, -0.06, 0);
+        // Light cone (visible glow beam)
+        const coneGeo = new THREE.ConeGeometry(0.22, 0.4, 20, 1, true);
+        const cone = new THREE.Mesh(coneGeo, M(0xfffde0, 0.1, 0, {
+            transparent:true, opacity:0.08,
+            emissive:0xfffde0, emissiveIntensity:0.5,
+            side: THREE.DoubleSide
+        }));
+        cone.position.set(0, -0.26, 0);
+        cone.rotation.x = Math.PI;
+        group.add(cone);
+    }
+
+    // ── AC UNIT (wall-mounted split AC) ──────────────────────────────────────
+    else if (type === 'ac') {
+        const bodyMat  = M(0xf0f0f0, 0.3, 0.1);
+        const ventMat  = M(0xd8d8d8, 0.4, 0.1);
+        const detailMat= M(0xcccccc, 0.3, 0.2);
+        const ledMat   = M(0x00ff88, 0.1, 0.0, { emissive:0x00ff88, emissiveIntensity:1.5 });
+
+        // Main body — wide flat unit
+        add(box(1.0, 0.28, 0.22, bodyMat), 0, 0, 0);
+        // Front face panel (slightly recessed)
+        add(box(0.96, 0.24, 0.01, M(0xfafafa, 0.2, 0.1)), 0, 0, 0.115);
+        // Top vent grille (horizontal slats)
+        for (let i = 0; i < 6; i++) {
+            add(box(0.88, 0.012, 0.06, ventMat), 0, 0.08, 0.12 + i*0.001);
+        }
+        // Front air outlet grille (angled slats)
+        for (let i = 0; i < 8; i++) {
+            const slat = box(0.82, 0.008, 0.055, ventMat);
+            slat.position.set(0, -0.04 + i*0.012, 0.115);
+            slat.rotation.x = 0.25;
+            group.add(slat);
+        }
+        // Flap at bottom of outlet
+        add(box(0.84, 0.012, 0.07, detailMat), 0, -0.1, 0.11);
+        // Control panel strip (right side)
+        add(box(0.12, 0.06, 0.012, M(0xe8e8e8, 0.3)), 0.38, 0.04, 0.116);
+        // LED indicator
+        add(box(0.018, 0.018, 0.008, ledMat), 0.38, 0.06, 0.12);
+        // Brand strip
+        add(box(0.3, 0.018, 0.008, M(0xdddddd, 0.3)), -0.1, 0.1, 0.12);
+        // Side vents
+        add(box(0.01, 0.2, 0.18, ventMat), 0.51, 0, 0);
+        add(box(0.01, 0.2, 0.18, ventMat), -0.51, 0, 0);
+        // Mounting bracket (back)
+        add(box(0.9, 0.06, 0.04, M(0xaaaaaa, 0.4, 0.3)), 0, 0.1, -0.13);
+    }
+    const CEILING_ITEMS = ['ceilingfan','chandelier','pendantlight','spotlight'];
+    const roomH = parseFloat(document.getElementById('roomHeight')?.value || 8);
+    const roomL = parseFloat(document.getElementById('roomLength')?.value || 20);
+    const spawnY = (type === 'windowwall') ? 0.9
+                 : CEILING_ITEMS.includes(type) ? roomH - 0.05
+                 : (type === 'ac') ? roomH * 0.72
+                 : 0;
+    // AC spawns near the back wall, centered — easy to select and move
+    const spawnX = (type === 'ac') ? 0 : (Math.random() - 0.5) * 10;
+    const spawnZ = (type === 'ac') ? -(roomL / 2 - 0.15) : (Math.random() - 0.5) * 10;
+    group.position.set(spawnX, spawnY, spawnZ);
 
     group.traverse(child => {
         if (child.isMesh) {
@@ -1290,6 +1498,16 @@ function createFurniture(type) {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// Convert screen coords to normalised device coords relative to the canvas
+function toNDC(clientX, clientY) {
+    const canvas = renderer.domElement;
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x:  ((clientX - rect.left)  / rect.width)  * 2 - 1,
+        y: -((clientY - rect.top)   / rect.height)  * 2 + 1
+    };
+}
+
 // Setup event listeners once
 let draggingEnabled = false;
 
@@ -1304,8 +1522,8 @@ function enableDragging() {
 }
 
 function handleClick(e) {
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    const ndc = toNDC(e.clientX, e.clientY);
+    mouse.x = ndc.x; mouse.y = ndc.y;
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(furnitureList, true);
     
@@ -1341,8 +1559,8 @@ function handleClick(e) {
 }
 
 function handleMouseDown(e) {
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    const ndc = toNDC(e.clientX, e.clientY);
+    mouse.x = ndc.x; mouse.y = ndc.y;
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(furnitureList, true);
     
@@ -1355,7 +1573,16 @@ function handleMouseDown(e) {
         if (selectedObjects.has(clickedObject)) {
             orbitControls.enabled = false;
             draggedObject = clickedObject;
-            dragOffset.copy(draggedObject.position);
+            const objY = clickedObject.position.y;
+            const hPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -objY);
+            const intersection = new THREE.Vector3();
+            const hit = raycaster.ray.intersectPlane(hPlane, intersection);
+            if (hit) {
+                dragOffset.copy(intersection);
+                dragOffset.y = objY;
+            } else {
+                dragOffset.copy(clickedObject.position);
+            }
         }
     }
 }
@@ -1363,22 +1590,37 @@ function handleMouseDown(e) {
 function handleMouseMove(e) {
     if (!draggedObject) return;
     
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    const ndc = toNDC(e.clientX, e.clientY);
+    mouse.x = ndc.x; mouse.y = ndc.y;
     raycaster.setFromCamera(mouse, camera);
-    
-    const planeNormal = new THREE.Vector3(0, 1, 0);
-    const plane = new THREE.Plane(planeNormal, 0);
+
+    const objY = draggedObject.position.y;
     const intersection = new THREE.Vector3();
-    raycaster.ray.intersectPlane(plane, intersection);
-    
+
+    // Try horizontal plane at object's Y first
+    const hPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -objY);
+    const hitH = raycaster.ray.intersectPlane(hPlane, intersection);
+
+    if (!hitH) {
+        // Fallback: vertical plane facing the camera (for wall-mounted items viewed from low angle)
+        const camDir = new THREE.Vector3();
+        camera.getWorldDirection(camDir);
+        camDir.y = 0; camDir.normalize();
+        const vPlane = new THREE.Plane(camDir, -camDir.dot(draggedObject.position));
+        const hitV = raycaster.ray.intersectPlane(vPlane, intersection);
+        if (!hitV) return;
+        intersection.y = objY; // keep Y locked
+    }
+
     const delta = new THREE.Vector3().subVectors(intersection, dragOffset);
-    
-    selectedObjects.forEach(obj => {
-        obj.position.add(delta);
-    });
-    
+    delta.y = 0; // never change Y while dragging
+
+    selectedObjects.forEach(obj => { obj.position.add(delta); });
     dragOffset.copy(intersection);
+    dragOffset.y = objY;
+
+    // ── Boundary warning ──────────────────────────────────────────────────
+    checkBoundaryWarning();
 }
 
 function handleMouseUp() {
@@ -1387,6 +1629,58 @@ function handleMouseUp() {
     }
     draggedObject = null;
     orbitControls.enabled = true;
+    clearBoundaryWarning();
+}
+
+let _boundaryWarningActive = false;
+
+function checkBoundaryWarning() {
+    if (selectedObjects.size === 0) { clearBoundaryWarning(); return; }
+
+    const rw = parseFloat(document.getElementById('roomWidth')?.value  || 20);
+    const rl = parseFloat(document.getElementById('roomLength')?.value || 20);
+    const hw = rw / 2, hl = rl / 2;
+
+    let outside = false;
+    selectedObjects.forEach(obj => {
+        const p = obj.position;
+        if (Math.abs(p.x) > hw || Math.abs(p.z) > hl) outside = true;
+    });
+
+    if (outside) {
+        // Turn grid red
+        if (grid) grid.material.color.setHex(0xff4444);
+        if (grid) grid.material.opacity = 0.55;
+        // Show warning toast
+        let toast = document.getElementById('boundaryToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'boundaryToast';
+            Object.assign(toast.style, {
+                position: 'fixed', bottom: '70px', left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'rgba(239,68,68,0.92)',
+                color: '#fff', fontSize: '12px', fontWeight: '700',
+                padding: '7px 18px', borderRadius: '6px',
+                zIndex: '9999', pointerEvents: 'none',
+                letterSpacing: '0.5px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            });
+            toast.textContent = '⚠ Outside room boundary';
+            document.body.appendChild(toast);
+        }
+        toast.style.display = 'block';
+        _boundaryWarningActive = true;
+    } else {
+        clearBoundaryWarning();
+    }
+}
+
+function clearBoundaryWarning() {
+    if (!_boundaryWarningActive) return;
+    if (grid) { grid.material.color.setHex(0x999999); grid.material.opacity = 0.35; }
+    const toast = document.getElementById('boundaryToast');
+    if (toast) toast.style.display = 'none';
+    _boundaryWarningActive = false;
 }
 
 function updateSelectionHighlight() {
@@ -1401,10 +1695,64 @@ function updateSelectionHighlight() {
             }
         });
     });
+    updatePropsPanel();
+}
+
+function updatePropsPanel() {
+    const panel = document.getElementById('propsContent');
+    if (!panel) return;
+    if (selectedObjects.size === 0) {
+        panel.innerHTML = '<div class="props-empty">Select a furniture item to see its properties</div>';
+        return;
+    }
+    const obj = [...selectedObjects][0];
+    const pos = obj.position;
+    const rot = ((obj.rotation.y * 180 / Math.PI) % 360).toFixed(0);
+    const sc  = obj.scale.x.toFixed(2);
+    const type = obj.userData.type || '—';
+    panel.innerHTML = `
+        <div class="props-row">
+            <div class="props-label">Type</div>
+            <div class="props-value" style="text-transform:capitalize;">${type.replace(/([A-Z])/g,' $1')}</div>
+        </div>
+        <hr style="border:none;border-top:1px solid #383c46;margin:8px 0;">
+        <div class="props-label" style="margin-bottom:8px;">Position</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
+            <div><div class="props-label">X</div><div class="props-value">${pos.x.toFixed(2)}</div></div>
+            <div><div class="props-label">Y</div><div class="props-value">${pos.y.toFixed(2)}</div></div>
+            <div><div class="props-label">Z</div><div class="props-value">${pos.z.toFixed(2)}</div></div>
+        </div>
+        <hr style="border:none;border-top:1px solid #383c46;margin:8px 0;">
+        <div class="props-row">
+            <div class="props-label">Rotation Y</div>
+            <div class="props-value">${rot}°</div>
+        </div>
+        <div class="props-row">
+            <div class="props-label">Scale</div>
+            <div class="props-value">${sc}×</div>
+        </div>
+        <hr style="border:none;border-top:1px solid #383c46;margin:10px 0;">
+        <div style="margin-bottom:8px;">
+            <div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:5px;">Scale</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <button onclick="scaleSelected(-0.1)" style="width:28px;height:28px;background:#252830;border:1px solid #383c46;border-radius:4px;color:#e2e8f0;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;">−</button>
+                <input type="range" id="scaleSlider" min="0.2" max="3" step="0.05" value="${sc}" oninput="applyScaleFromSlider(this.value)" style="flex:1;height:4px;accent-color:#84cc16;cursor:pointer;">
+                <button onclick="scaleSelected(0.1)" style="width:28px;height:28px;background:#252830;border:1px solid #383c46;border-radius:4px;color:#e2e8f0;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;">+</button>
+            </div>
+            <div style="text-align:center;font-size:10px;color:#64748b;margin-top:3px;">Size: <span id="scaleValue">${sc}x</span></div>
+        </div>
+        <button onclick="rotateSelected()" style="width:100%;height:30px;background:#252830;border:1px solid #383c46;border-radius:5px;color:#e2e8f0;font-size:11px;font-weight:600;cursor:pointer;margin-bottom:6px;" onmouseover="this.style.borderColor='#84cc16'" onmouseout="this.style.borderColor='#383c46'">↻ Rotate 90°</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+            <button onclick="moveSelectedY(0.1)" style="height:30px;background:#252830;border:1px solid #383c46;border-radius:5px;color:#e2e8f0;font-size:11px;font-weight:600;cursor:pointer;" onmouseover="this.style.borderColor='#84cc16'" onmouseout="this.style.borderColor='#383c46'">↑ Up</button>
+            <button onclick="moveSelectedY(-0.1)" style="height:30px;background:#252830;border:1px solid #383c46;border-radius:5px;color:#e2e8f0;font-size:11px;font-weight:600;cursor:pointer;" onmouseover="this.style.borderColor='#84cc16'" onmouseout="this.style.borderColor='#383c46'">↓ Down</button>
+        </div>
+        <button onclick="deleteSelected()" style="width:100%;height:30px;background:#3a1a1a;border:1px solid #5a2020;border-radius:5px;color:#ef4444;font-size:11px;font-weight:600;cursor:pointer;" onmouseover="this.style.background='#ef4444';this.style.color='#fff'" onmouseout="this.style.background='#3a1a1a';this.style.color='#ef4444'">✕ Delete</button>
+    `;
 }
 
 function addFurniture(type) {
-    createFurniture(type);
+    const obj = createFurniture(type);
+    obj.userData.type = type;
 }
 
 function addSelectedFurniture() {
@@ -1658,6 +2006,13 @@ function toggleWalls() {
 
 function toggleRoof() {
     roof.visible = !roof.visible;
+    // Also hide/show ceiling-mounted items
+    const CEILING_ITEMS = ['ceilingfan','chandelier','pendantlight','spotlight'];
+    furnitureList.forEach(obj => {
+        if (CEILING_ITEMS.includes(obj.userData.type)) {
+            obj.visible = roof.visible;
+        }
+    });
 }
 
 function toggleGrid() {
