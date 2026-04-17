@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import wallEditor from './wallEditor.js';
 
 let scene, camera, renderer, orbitControls;
 let furnitureList = [], selectedObjects = new Set(), walls = null, floor = null, grid = null, roof = null;
@@ -16,6 +17,8 @@ let velocity = new THREE.Vector3();
 init();
 animate();
 
+let floorPlanActive = false;
+
 window.addFurniture = addFurniture;
 window.addSelectedFurniture = addSelectedFurniture;
 window.rotateSelected = rotateSelected;
@@ -25,7 +28,9 @@ window.applyScaleFromSlider = applyScaleFromSlider;
 window.changeWallColor = changeWallColor;
 window.changeFloorColor = changeFloorColor;
 window.changeRoofColor = changeRoofColor;
+window.changeRoofType  = changeRoofType;
 window.changeWallStyle = changeWallStyle;
+window.getWallMat = getWallMat;
 window.toggleWalls = toggleWalls;
 window.toggleGrid = toggleGrid;
 window.toggleRoof = toggleRoof;
@@ -44,6 +49,7 @@ window.resetCamera = resetCamera;
 window.topView = topView;
 window.captureScreenshot = captureScreenshot;
 window.createFurniture = createFurniture;
+window.toggleFloorPlan = toggleFloorPlan;
 
 function makeGrid(width, length) {
     const points = [];
@@ -64,9 +70,10 @@ function makeGrid(width, length) {
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
-    const mat = new THREE.LineBasicMaterial({ color: 0x999999, transparent: true, opacity: 0.35 });
+    const mat = new THREE.LineBasicMaterial({ color: 0x999999, transparent: true, opacity: 0.35, depthWrite: false });
     const g = new THREE.LineSegments(geo, mat);
-    g.position.y = 0.006;
+    g.position.y = 0.008;
+    g.renderOrder = 1;
     return g;
 }
 
@@ -120,7 +127,7 @@ function init() {
     camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(12, 10, 12);
 
-    renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("canvas"), antialias: true });
+    renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("canvas"), antialias: true, logarithmicDepthBuffer: true });
     const SIDEBAR_W = 280, TOOLBAR_H = 44, PROPS_W = 220;
     const vw = window.innerWidth - SIDEBAR_W - PROPS_W;
     const vh = window.innerHeight - TOOLBAR_H;
@@ -188,67 +195,37 @@ function init() {
             map: makeFloorTexture('#dcd5c8'),
             roughness: 0.82,
             metalness: 0.02,
+            polygonOffset: true,
+            polygonOffsetFactor: 2,
+            polygonOffsetUnits: 2,
         })
     );
     floor.rotation.x = -Math.PI / 2;
+    floor.position.y = 0;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Grid — 1m per cell, exact rectangle, no scaling artifacts
+    // Grid — sits clearly above floor to avoid Z-fighting
     grid = makeGrid(20, 20);
+    grid.position.y = 0.008;
     scene.add(grid);
 
-    // === WALLS ===
-    walls = new THREE.Group();
-    const wallMat = new THREE.MeshStandardMaterial({
-        color: 0xf2ede8,
-        roughness: 0.88,
-        metalness: 0.0,
-        side: THREE.DoubleSide
-    });
-
-    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(20, 8), wallMat);
-    backWall.position.set(0, 4, -10);
-    backWall.receiveShadow = true;
-    walls.add(backWall);
-
-    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(20, 8), wallMat);
-    leftWall.position.set(-10, 4, 0);
-    leftWall.rotation.y = Math.PI / 2;
-    leftWall.receiveShadow = true;
-    walls.add(leftWall);
-
-    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(20, 8), wallMat);
-    rightWall.position.set(10, 4, 0);
-    rightWall.rotation.y = -Math.PI / 2;
-    rightWall.receiveShadow = true;
-    walls.add(rightWall);
-
+    // === WALLS — managed by wall editor, no default box walls ===
+    walls = new THREE.Group(); // kept for legacy toggleWalls compatibility
     scene.add(walls);
 
-    // Create ceiling — soft white with subtle emissive to simulate ceiling light bounce
-    roof = new THREE.Mesh(
-        new THREE.PlaneGeometry(20, 20),
-        new THREE.MeshStandardMaterial({ 
-            color: 0xf8f6f2,
-            roughness: 0.95,
-            metalness: 0.0,
-            emissive: 0xfff8f0,
-            emissiveIntensity: 0.06,
-            transparent: true,
-            opacity: 0.82,
-            side: THREE.DoubleSide 
-        })
-    );
-    roof.rotation.x = Math.PI / 2;
-    roof.position.y = 8;
-    roof.receiveShadow = true;
-    roof.castShadow = false; // Glass doesn't cast hard shadows
+    // Initialise wall editor groups in scene
+    wallEditor.initScene(scene);
+
+    // No default roof — roof is added when user clicks "Add Roof" or draws walls
+    roof = new THREE.Group(); // empty group placeholder
+    roof.visible = false;
     scene.add(roof);
 
     window.addEventListener("resize", () => {
+        if (floorPlanActive) return; // wall editor handles its own resize
         const vw = window.innerWidth - 280 - 220;
-        const vh = window.innerHeight - 44;
+        const vh = window.innerHeight - 48;
         camera.aspect = vw / vh;
         camera.updateProjectionMatrix();
         renderer.setSize(vw, vh);
@@ -260,6 +237,78 @@ function animate() {
     updateWalkMode();
     orbitControls.update();
     renderer.render(scene, camera);
+}
+
+function getWallMat(color, style) {
+    const hr = parseInt(color.slice(1,3),16);
+    const hg = parseInt(color.slice(3,5),16);
+    const hb = parseInt(color.slice(5,7),16);
+    if (!style || style === 'plain') {
+        return new THREE.MeshStandardMaterial({ color, roughness: 0.88, metalness: 0, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+    }
+    const size = 512;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = size;
+    const ctx = cv.getContext('2d');
+    let rough = 0.9, metal = 0;
+    if (style === 'brick') {
+        ctx.fillStyle = `rgb(${Math.min(255,hr+40)},${Math.min(255,hg+30)},${Math.min(255,hb+20)})`;
+        ctx.fillRect(0,0,size,size);
+        const bw=120,bh=52,gap=8;
+        for(let row=0;row<size/bh+2;row++){
+            const off=(row%2)*(bw/2);
+            for(let col=-1;col<size/bw+2;col++){
+                const v=Math.floor(Math.random()*25-12);
+                ctx.fillStyle=`rgb(${Math.min(255,Math.max(0,hr+v))},${Math.min(255,Math.max(0,hg+v-5))},${Math.min(255,Math.max(0,hb+v-10))})`;
+                ctx.fillRect(col*bw+off+gap/2,row*bh+gap/2,bw-gap,bh-gap);
+                ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(col*bw+off+gap/2,row*bh+gap/2,bw-gap,6);
+                ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(col*bw+off+gap/2,row*bh+bh-gap/2-5,bw-gap,5);
+            }
+        }
+        rough=0.95;
+    } else if (style === 'woodpanel') {
+        const pw=size/5;
+        for(let i=0;i<5;i++){
+            const v=Math.floor(Math.random()*20-10);
+            ctx.fillStyle=`rgb(${Math.min(255,Math.max(0,hr+v))},${Math.min(255,Math.max(0,hg+v-8))},${Math.min(255,Math.max(0,hb+v-15))})`;
+            ctx.fillRect(i*pw,0,pw-4,size);
+            for(let g=0;g<30;g++){
+                ctx.strokeStyle=`rgba(0,0,0,${0.03+Math.random()*0.06})`;
+                ctx.lineWidth=0.5+Math.random();
+                ctx.beginPath(); ctx.moveTo(i*pw+Math.random()*pw,0); ctx.lineTo(i*pw+Math.random()*pw,size); ctx.stroke();
+            }
+        }
+        rough=0.72;
+    } else if (style === 'tile') {
+        const ts=80,gap=5;
+        ctx.fillStyle=`rgb(${(hr*0.6)|0},${(hg*0.6)|0},${(hb*0.6)|0})`;
+        ctx.fillRect(0,0,size,size);
+        for(let y=0;y<size;y+=ts+gap) for(let x=0;x<size;x+=ts+gap){
+            const v=Math.random()*8-4;
+            ctx.fillStyle=`rgb(${Math.min(255,(hr+v)|0)},${Math.min(255,(hg+v)|0)},${Math.min(255,(hb+v)|0)})`;
+            ctx.fillRect(x+gap/2,y+gap/2,ts,ts);
+            const g=ctx.createLinearGradient(x,y,x+ts,y+ts);
+            g.addColorStop(0,'rgba(255,255,255,0.18)'); g.addColorStop(1,'rgba(0,0,0,0.06)');
+            ctx.fillStyle=g; ctx.fillRect(x+gap/2,y+gap/2,ts,ts);
+        }
+        rough=0.18; metal=0.05;
+    } else if (style === 'concrete') {
+        ctx.fillStyle=color; ctx.fillRect(0,0,size,size);
+        const imgData=ctx.getImageData(0,0,size,size);
+        for(let i=0;i<imgData.data.length;i+=4){
+            const n=(Math.random()-0.5)*45;
+            imgData.data[i]=Math.min(255,Math.max(0,imgData.data[i]+n));
+            imgData.data[i+1]=Math.min(255,Math.max(0,imgData.data[i+1]+n));
+            imgData.data[i+2]=Math.min(255,Math.max(0,imgData.data[i+2]+n));
+        }
+        ctx.putImageData(imgData,0,0);
+        for(let y=0;y<size;y+=80){ ctx.strokeStyle='rgba(0,0,0,0.18)'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(size,y); ctx.stroke(); }
+        rough=0.95;
+    }
+    const tex = new THREE.CanvasTexture(cv);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2,2);
+    return new THREE.MeshStandardMaterial({ map: tex, roughness: rough, metalness: metal, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
 }
 
 function createFurniture(type) {
@@ -542,48 +591,56 @@ function createFurniture(type) {
         add(sph(0.04,M(0xffffcc,0.1,0,{emissive:0xffffaa,emissiveIntensity:1.0})),0,1.22,0);
     }
     else if (type === 'interiorwall') {
-        const wm = M(0xf5f2ee,0.85); const bm = M(0xe8e4de,0.9);
-        add(box(3.0,2.6,0.15,wm),0,1.3,0);
-        // Baseboard
+        const wallColor = document.getElementById('wallColor')?.value || '#f2ede8';
+        const wallStyle = document.getElementById('wallStyleSelect')?.value || 'plain';
+        const wm = getWallMat(wallColor, wallStyle);
+        const bm = M(0xe8e4de,0.9);
+        const wallMesh = box(3.0,2.6,0.15,wm); wallMesh.userData.isWallSurface = true;
+        add(wallMesh,0,1.3,0);
         add(box(3.0,0.1,0.17,bm),0,0.05,0);
-        // Crown molding
         add(box(3.0,0.08,0.17,bm),0,2.56,0);
+        group.userData.wallColor = wallColor;
+        group.userData.wallStyle = wallStyle;
     }
     else if (type === 'doorwall') {
-        const wm = M(0xf5f2ee,0.85); const dm = M(0x7a5030,0.5); const hm = M(0xd4a020,0.1,0.9);
-        // Wall sections around door
-        add(box(1.0,2.6,0.15,wm),-1.0,1.3,0); add(box(1.0,2.6,0.15,wm),1.0,1.3,0);
-        add(box(3.0,0.42,0.15,wm),0,2.39,0);
-        // Baseboards
+        const wallColor = document.getElementById('wallColor')?.value || '#f2ede8';
+        const wallStyle = document.getElementById('wallStyleSelect')?.value || 'plain';
+        const wm = getWallMat(wallColor, wallStyle);
+        const dm = M(0x7a5030,0.5); const hm = M(0xd4a020,0.1,0.9);
+        const w1=box(1.0,2.6,0.15,wm); w1.userData.isWallSurface=true; add(w1,-1.0,1.3,0);
+        const w2=box(1.0,2.6,0.15,wm); w2.userData.isWallSurface=true; add(w2,1.0,1.3,0);
+        const w3=box(3.0,0.42,0.15,wm); w3.userData.isWallSurface=true; add(w3,0,2.39,0);
         add(box(3.0,0.1,0.17,M(0xe8e4de,0.9)),0,0.05,0);
-        // Door frame
         add(box(0.08,2.1,0.18,dm),-0.46,1.05,0); add(box(0.08,2.1,0.18,dm),0.46,1.05,0);
         add(box(1.0,0.08,0.18,dm),0,2.14,0);
-        // Door panel
         add(box(0.86,2.06,0.04,M(0x8a6040,0.45)),0.02,1.03,0.02);
-        // Door panels (recessed)
         add(box(0.7,0.88,0.01,M(0x7a5030,0.5)),0.02,1.52,0.05);
         add(box(0.7,0.88,0.01,M(0x7a5030,0.5)),0.02,0.54,0.05);
-        // Handle
         add(sph(0.025,hm),0.32,1.05,0.06);
         add(cyl(0.008,0.008,0.12,hm),0.32,1.05,0.06);
+        group.userData.wallColor = wallColor;
+        group.userData.wallStyle = wallStyle;
     }
     else if (type === 'windowwall') {
-        const wm = M(0xf5f2ee,0.85); const fm = M(0xffffff,0.3); const gm = M(0x90c8e0,0.05,0.1,{transparent:true,opacity:0.35});
-        // Wall sections
-        add(box(3.0,0.7,0.15,wm),0,0.35,0);
-        add(box(3.0,0.8,0.15,wm),0,2.2,0);
-        add(box(0.75,1.1,0.15,wm),-1.12,1.35,0); add(box(0.75,1.1,0.15,wm),1.12,1.35,0);
-        // Baseboards
+        const wallColor = document.getElementById('wallColor')?.value || '#f2ede8';
+        const wallStyle = document.getElementById('wallStyleSelect')?.value || 'plain';
+        const wm = getWallMat(wallColor, wallStyle);
+        const fm = M(0xffffff,0.3); const gm = M(0x90c8e0,0.05,0.1,{transparent:true,opacity:0.35});
+        const ws = [
+            box(3.0,0.7,0.15,wm), box(3.0,0.8,0.15,wm),
+            box(0.75,1.1,0.15,wm), box(0.75,1.1,0.15,wm)
+        ];
+        ws.forEach(m => { m.userData.isWallSurface = true; });
+        add(ws[0],0,0.35,0); add(ws[1],0,2.2,0);
+        add(ws[2],-1.12,1.35,0); add(ws[3],1.12,1.35,0);
         add(box(3.0,0.1,0.17,M(0xe8e4de,0.9)),0,0.05,0);
-        // Window frame (white PVC)
         add(box(1.56,0.06,0.18,fm),0,1.84,0); add(box(1.56,0.06,0.18,fm),0,0.86,0);
         add(box(0.06,1.0,0.18,fm),-0.75,1.35,0); add(box(0.06,1.0,0.18,fm),0.75,1.35,0);
-        add(box(0.04,1.0,0.18,fm),0,1.35,0); // centre mullion
-        // Glass panes
+        add(box(0.04,1.0,0.18,fm),0,1.35,0);
         add(box(0.68,0.9,0.01,gm),-0.37,1.35,0.01); add(box(0.68,0.9,0.01,gm),0.37,1.35,0.01);
-        // Window sill
         add(box(1.6,0.06,0.22,M(0xf0ede8,0.4)),0,0.83,0.04);
+        group.userData.wallColor = wallColor;
+        group.userData.wallStyle = wallStyle;
     }
     else if (type === 'glasswall') {
         // Realistic glass wall: aluminium frame + 3 glass panels + floor track
@@ -1696,6 +1753,7 @@ function updateSelectionHighlight() {
         });
     });
     updatePropsPanel();
+    updateWallDimsPanel();
 }
 
 function updatePropsPanel() {
@@ -1813,14 +1871,14 @@ function changeWallColor(color) {
     const styleSelect = document.getElementById('wallStyleSelect');
     const style = styleSelect ? styleSelect.value : 'plain';
     if (style === 'plain') {
-        // Just update color directly
         walls.traverse(child => {
             if (child.isMesh) child.material.color.setStyle(color);
         });
     } else {
-        // Regenerate texture with new color baked in
         changeWallStyle(style);
     }
+    // Also update wall editor walls
+    if (wallEditor && wallEditor.applyWallColor) wallEditor.applyWallColor(color);
     setTimeout(() => window.saveSession(), 200);
 }
 
@@ -1996,22 +2054,297 @@ function changeFloorColor(color) {
 }
 
 function changeRoofColor(color) {
-    roof.material.color.setStyle(color);
+    roof.traverse(obj => {
+        if (obj.isMesh) obj.material.color.setStyle(color);
+    });
     setTimeout(() => window.saveSession(), 200);
 }
+
+function changeRoofType(type) {
+    window.applyRoofShape(type);
+    setTimeout(() => window.saveSession(), 200);
+}
+
+// ── ROOF BUILDER ─────────────────────────────────────────────────────────────
+
+// Called by wallEditor when walls change — fits roof over drawn wall bounding box
+window.updateRoofToFitWalls = function(segments) {
+    if (!currentRoofShape || currentRoofShape === 'none') return;
+    if (!segments || segments.length === 0) return;
+    applyRoofShape(currentRoofShape);
+};
+let currentRoofShape = 'none';
+window.currentRoofShape = 'none';
+
+window.applyRoofShape = function(shape) {
+    currentRoofShape = shape;
+    window.currentRoofShape = shape;
+
+    // Update button states
+    ['none','flat','gable','hip'].forEach(s => {
+        const btn = document.getElementById('roofBtn_' + s);
+        if (btn) {
+            btn.style.background = s === shape ? 'rgba(201,169,110,0.15)' : '';
+            btn.style.borderColor = s === shape ? 'rgba(201,169,110,0.4)' : '';
+            btn.style.color = s === shape ? '#c9a96e' : '';
+        }
+    });
+
+    // Show/hide pitch row
+    const pitchRow = document.getElementById('roofPitchRow');
+    if (pitchRow) pitchRow.style.display = (shape === 'gable' || shape === 'hip') ? 'block' : 'none';
+
+    if (shape === 'none') {
+        if (roof) { scene.remove(roof); roof = new THREE.Group(); roof.visible = false; scene.add(roof); }
+        return;
+    }
+
+    // Get dimensions from drawn walls or room size inputs
+    const segments = wallEditor.getSegments ? wallEditor.getSegments() : [];
+    let width, length, cx = 0, cz = 0;
+
+    if (segments.length > 0) {
+        let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+        for (const seg of segments) {
+            minX = Math.min(minX, seg.start.x, seg.end.x);
+            maxX = Math.max(maxX, seg.start.x, seg.end.x);
+            minZ = Math.min(minZ, seg.start.z, seg.end.z);
+            maxZ = Math.max(maxZ, seg.start.z, seg.end.z);
+        }
+        width  = maxX - minX;
+        length = maxZ - minZ;
+        cx = (minX + maxX) / 2;
+        cz = (minZ + maxZ) / 2;
+    } else {
+        width  = parseFloat(document.getElementById('roomWidth')?.value  || 20);
+        length = parseFloat(document.getElementById('roomLength')?.value || 20);
+    }
+
+    const height   = parseFloat(document.getElementById('roomHeight')?.value   || 8);
+    const overhang = parseFloat(document.getElementById('roofOverhang')?.value || 0.5);
+    const pitch    = parseFloat(document.getElementById('roofPitch')?.value    || 2.5);
+    const colorHex = document.getElementById('roofColor')?.value || '#f8f6f2';
+    const wasVisible = roof ? roof.visible : true;
+
+    if (roof) scene.remove(roof);
+    roof = buildRoof(shape, width + overhang * 2, length + overhang * 2, height, pitch, new THREE.Color(colorHex), 0.9);
+    roof.position.set(cx, 0, cz);
+    roof.visible = wasVisible;
+    scene.add(roof);
+};
+
+function buildRoof(type, width, length, height, pitchOrColor, colorOrOpacity, opacityArg) {
+    // Support both old signature (type,w,l,h,color,opacity) and new (type,w,l,h,pitch,color,opacity)
+    let pitch, color, opacity;
+    if (pitchOrColor instanceof THREE.Color || typeof pitchOrColor === 'string') {
+        pitch   = Math.min(width, length) * 0.25;
+        color   = pitchOrColor;
+        opacity = colorOrOpacity;
+    } else {
+        pitch   = pitchOrColor || Math.min(width, length) * 0.25;
+        color   = colorOrOpacity;
+        opacity = opacityArg;
+    }
+
+    const group = new THREE.Group();
+    const W = width;   // overhang already applied by caller
+    const L = length;
+    const hw = W / 2, hl = L / 2;
+    const base = height;
+
+    const mat = () => new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.85,
+        metalness: 0.0,
+        transparent: true,
+        opacity: opacity,
+        side: THREE.DoubleSide
+    });
+
+    // Helper — build a mesh from raw world-space vertices (triangles)
+    function polyMesh(verts) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+        geo.computeVertexNormals();
+        const m = new THREE.Mesh(geo, mat());
+        m.receiveShadow = true;
+        return m;
+    }
+
+    // Helper — quad (4 corners) → 2 triangles
+    function quad(a, b, c, d) {
+        return polyMesh([
+            a[0],a[1],a[2], b[0],b[1],b[2], c[0],c[1],c[2],
+            a[0],a[1],a[2], c[0],c[1],c[2], d[0],d[1],d[2]
+        ]);
+    }
+
+    // Helper — triangle
+    function tri(a, b, c) {
+        return polyMesh([a[0],a[1],a[2], b[0],b[1],b[2], c[0],c[1],c[2]]);
+    }
+
+    if (type === 'flat') {
+        // ── Flat ceiling ──────────────────────────────────────────
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, length), mat());
+        mesh.rotation.x = Math.PI / 2;
+        mesh.position.y = base;
+        mesh.receiveShadow = true;
+        group.add(mesh);
+
+    } else if (type === 'gable') {
+        // ── Interior flat ceiling at wall-top height ──────────────
+        const ceilMat = new THREE.MeshStandardMaterial({
+            color: color, roughness: 0.9, metalness: 0.0,
+            side: THREE.DoubleSide,
+            polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1
+        });
+        const ceil = new THREE.Mesh(new THREE.PlaneGeometry(W, L), ceilMat);
+        ceil.rotation.x = Math.PI / 2;
+        ceil.position.y = base;
+        ceil.receiveShadow = true;
+        group.add(ceil);
+
+        // ── Gable: ridge runs along Z, slopes left & right ────────
+        // Ridge corners (top centre, full length)
+        const ridgeZ1 =  hl;
+        const ridgeZ2 = -hl;
+        const ridgeY  = base + pitch;
+
+        // Left slope: ridge → left eave
+        group.add(quad(
+            [-hw, base,  hl],   // front-left eave
+            [ 0,  ridgeY, ridgeZ1], // front-ridge
+            [ 0,  ridgeY, ridgeZ2], // back-ridge
+            [-hw, base, -hl]    // back-left eave
+        ));
+
+        // Right slope: ridge → right eave
+        group.add(quad(
+            [ hw, base,  hl],   // front-right eave
+            [ hw, base, -hl],   // back-right eave
+            [ 0,  ridgeY, ridgeZ2], // back-ridge
+            [ 0,  ridgeY, ridgeZ1]  // front-ridge
+        ));
+
+        // Front gable triangle
+        group.add(tri(
+            [-hw, base,  hl],
+            [ hw, base,  hl],
+            [  0, ridgeY, hl]
+        ));
+
+        // Back gable triangle
+        group.add(tri(
+            [ hw, base, -hl],
+            [-hw, base, -hl],
+            [  0, ridgeY, -hl]
+        ));
+
+    } else if (type === 'hip') {
+        // ── Interior flat ceiling at wall-top height ──────────────
+        const ceilMat = new THREE.MeshStandardMaterial({
+            color: color, roughness: 0.9, metalness: 0.0,
+            side: THREE.DoubleSide,
+            polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1
+        });
+        const ceil = new THREE.Mesh(new THREE.PlaneGeometry(W, L), ceilMat);
+        ceil.rotation.x = Math.PI / 2;
+        ceil.position.y = base;
+        ceil.receiveShadow = true;
+        group.add(ceil);
+
+        // ── Hip: four slopes meeting at a central ridge ────────────
+        // Ridge runs along Z, inset from ends
+        const ridgeInset = Math.min(hw, hl) * 0.5;
+        const ridgeY = base + pitch;
+
+        // Front triangle
+        group.add(tri(
+            [-hw, base,  hl],
+            [ hw, base,  hl],
+            [  0, ridgeY, hl - ridgeInset]
+        ));
+        // Back triangle
+        group.add(tri(
+            [ hw, base, -hl],
+            [-hw, base, -hl],
+            [  0, ridgeY, -(hl - ridgeInset)]
+        ));
+        // Left trapezoid
+        group.add(quad(
+            [-hw, base, -hl],
+            [-hw, base,  hl],
+            [  0, ridgeY, hl - ridgeInset],
+            [  0, ridgeY, -(hl - ridgeInset)]
+        ));
+        // Right trapezoid
+        group.add(quad(
+            [ hw, base,  hl],
+            [ hw, base, -hl],
+            [  0, ridgeY, -(hl - ridgeInset)],
+            [  0, ridgeY, hl - ridgeInset]
+        ));
+
+    } else if (type === 'shed') {
+        // ── Shed: single slope, high at back (-Z), low at front (+Z)
+        const shedPitch = Math.min(W, L) * 0.35;
+        // Main slope panel
+        group.add(quad(
+            [-hw, base,              hl],   // front-left  (low)
+            [ hw, base,              hl],   // front-right (low)
+            [ hw, base + shedPitch, -hl],   // back-right  (high)
+            [-hw, base + shedPitch, -hl]    // back-left   (high)
+        ));
+        // Left side fill: low-front → high-back → high-front corner
+        group.add(tri(
+            [-hw, base,              hl],   // front-low
+            [-hw, base + shedPitch, -hl],   // back-high
+            [-hw, base,             -hl]    // back-low (wall top)
+        ));
+        // Right side fill
+        group.add(tri(
+            [ hw, base,              hl],   // front-low
+            [ hw, base,             -hl],   // back-low (wall top)
+            [ hw, base + shedPitch, -hl]    // back-high
+        ));
+    }
+
+    group.userData.roofType = type;
+    return group;
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function toggleWalls() {
     walls.visible = !walls.visible;
 }
 
+function toggleFloorPlan() {
+    const btn = document.getElementById('floorPlanBtn');
+    if (!floorPlanActive) {
+        floorPlanActive = true;
+        wallEditor.activate(scene, camera, renderer);
+        if (btn) { btn.classList.add('active'); btn.textContent = '✦ Floor Plan ON'; }
+    } else {
+        floorPlanActive = false;
+        wallEditor.deactivate(renderer, camera);
+        if (btn) { btn.classList.remove('active'); btn.textContent = '⊞ Floor Plan'; }
+    }
+}
+
 function toggleRoof() {
+    // If no roof shape selected yet, apply flat roof first
+    if (!currentRoofShape || currentRoofShape === 'none') {
+        window.applyRoofShape('flat');
+        // Update button state in sidebar
+        const btn = document.getElementById('roofBtn_flat');
+        if (btn) { btn.style.background='rgba(201,169,110,0.15)'; btn.style.borderColor='rgba(201,169,110,0.4)'; btn.style.color='#c9a96e'; }
+        return;
+    }
     roof.visible = !roof.visible;
-    // Also hide/show ceiling-mounted items
     const CEILING_ITEMS = ['ceilingfan','chandelier','pendantlight','spotlight'];
     furnitureList.forEach(obj => {
-        if (CEILING_ITEMS.includes(obj.userData.type)) {
-            obj.visible = roof.visible;
-        }
+        if (CEILING_ITEMS.includes(obj.userData.type)) obj.visible = roof.visible;
     });
 }
 
@@ -2023,6 +2356,12 @@ function updateRoomSize() {
     const width  = parseFloat(document.getElementById('roomWidth').value)  || 20;
     const length = parseFloat(document.getElementById('roomLength').value) || 20;
     const height = parseFloat(document.getElementById('roomHeight').value) || 8;
+
+    // Sync wall editor height
+    if (wallEditor && wallEditor.setWallHeight) wallEditor.setWallHeight(height);
+    // Sync wall height input in floor plan editor if open
+    const weH = document.getElementById('weWallHeight');
+    if (weH) weH.value = height;
 
     // Store current colors
     const currentFloorColor = floor.material.color.clone();
@@ -2037,65 +2376,41 @@ function updateRoomSize() {
             color: currentFloorColor,
             map: makeFloorTexture(floorColorHex),
             roughness: 0.82,
-            metalness: 0.02
+            metalness: 0.02,
+            polygonOffset: true,
+            polygonOffsetFactor: 2,
+            polygonOffsetUnits: 2,
         })
     );
     floor.rotation.x = -Math.PI / 2;
+    floor.position.y = 0;
     floor.receiveShadow = true;
     scene.add(floor);
 
     // ── Grid: 1 cell = 1 metre, exact rectangle ──────────────────
     scene.remove(grid);
     grid = makeGrid(width, length);
+    grid.position.y = 0.008;
     scene.add(grid);
 
-    // ── Walls ─────────────────────────────────────────────────────
+    // ── Walls — managed by wall editor, no fixed box walls ────────
     scene.remove(walls);
     walls = new THREE.Group();
-    const wallMat = new THREE.MeshStandardMaterial({ color: currentWallColor, roughness: 0.88, metalness: 0.0, side: THREE.DoubleSide });
-
-    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wallMat);
-    backWall.position.set(0, height / 2, -length / 2);
-    backWall.receiveShadow = true;
-    walls.add(backWall);
-
-    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(length, height), wallMat);
-    leftWall.position.set(-width / 2, height / 2, 0);
-    leftWall.rotation.y = Math.PI / 2;
-    leftWall.receiveShadow = true;
-    walls.add(leftWall);
-
-    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(length, height), wallMat);
-    rightWall.position.set(width / 2, height / 2, 0);
-    rightWall.rotation.y = -Math.PI / 2;
-    rightWall.receiveShadow = true;
-    walls.add(rightWall);
-
     scene.add(walls);
 
     // Re-apply wall style after rebuild
     const styleSelect = document.getElementById('wallStyleSelect');
     if (styleSelect) window.changeWallStyle(styleSelect.value || 'plain');
-    const currentRoofColor   = roof.material.color.clone();
-    const currentRoofOpacity = roof.material.opacity;
+
+    // Rebuild roof preserving type and color
+    const currentRoofColor   = roof.material ? roof.material.color.clone() : (roof.children[0] ? roof.children[0].material.color.clone() : new THREE.Color(0xf8f6f2));
+    const currentRoofOpacity = roof.material ? roof.material.opacity : (roof.children[0] ? roof.children[0].material.opacity : 0.82);
+    const currentRoofVisible = roof.visible;
+    const roofTypeSelect = document.getElementById('roofTypeSelect');
+    const currentRoofType = roofTypeSelect ? roofTypeSelect.value : 'flat';
     scene.remove(roof);
-    roof = new THREE.Mesh(
-        new THREE.PlaneGeometry(width, length),
-        new THREE.MeshStandardMaterial({
-            color: currentRoofColor,
-            roughness: 0.95,
-            metalness: 0.0,
-            emissive: 0xfff8f0,
-            emissiveIntensity: 0.06,
-            transparent: true,
-            opacity: currentRoofOpacity,
-            side: THREE.DoubleSide
-        })
-    );
-    roof.rotation.x = Math.PI / 2;
-    roof.position.y = height;
-    roof.receiveShadow = true;
-    roof.castShadow = false;
+    roof = buildRoof(currentRoofType, width, length, height, currentRoofColor, currentRoofOpacity);
+    roof.visible = currentRoofVisible;
     scene.add(roof);
 
     // Update shadow camera to cover the room
@@ -2124,25 +2439,11 @@ function deleteSelected() {
     setTimeout(() => window.saveSession(), 200);
 }
 
+// Track currently loaded design for silent re-save
+let currentDesignId   = null;
+let currentDesignName = null;
+
 async function saveDesign() {
-    // Check if user is logged in
-    if (!window.currentUser) {
-        const signIn = confirm('You need to sign in to save your design. Would you like to go to the sign in page?');
-        if (signIn) {
-            document.body.classList.add('page-transition');
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 300);
-        }
-        return;
-    }
-    
-    // Ask user for design name
-    const designName = prompt('Enter a name for your design:', `Design ${new Date().toLocaleString()}`);
-    if (!designName) {
-        return; // User cancelled
-    }
-    
     const furnitureData = furnitureList.map(obj => ({
         type: obj.userData.type,
         x: obj.position.x,
@@ -2161,42 +2462,65 @@ async function saveDesign() {
         floorColor: document.getElementById('floorColor').value,
         roofColor:  document.getElementById('roofColor').value,
     };
-    
+
+    let designName = currentDesignName;
+    let designId   = currentDesignId;
+
+    // If no existing design loaded, ask for a name
+    if (!designId) {
+        designName = prompt('Enter a name for your design:', `Design ${new Date().toLocaleString()}`);
+        if (!designName) return; // cancelled
+    }
+
     try {
+        const payload = { furniture: furnitureData, room: roomData, walls: wallEditor.serialize() };
+        if (designId) {
+            payload.design_id = designId;
+        } else {
+            payload.name = designName;
+        }
+
         const response = await fetch("/save", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: designName, furniture: furnitureData, room: roomData })
+            body: JSON.stringify(payload)
         });
-        
+
+        if (response.status === 401) { showLoginPrompt('save your design'); return; }
         const result = await response.json();
-        
+
         if (result.success) {
-            alert(result.message);
+            // Track the saved design for future silent saves
+            currentDesignId   = result.design_id;
+            currentDesignName = result.design_name;
+            showSaveToast(result.design_name);
         } else {
-            alert("Failed to save design: " + result.message);
+            alert("Failed to save: " + result.message);
         }
     } catch (error) {
         alert("Error saving design: " + error.message);
     }
 }
 
+function showSaveToast(name) {
+    const t = document.createElement('div');
+    t.textContent = `✓ "${name}" saved`;
+    Object.assign(t.style, {
+        position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+        background:'#1a1a1a', color:'#84cc16', padding:'10px 22px',
+        borderRadius:'8px', fontSize:'13px', fontWeight:'600',
+        zIndex:'99999', opacity:'1', transition:'opacity 0.4s',
+        border:'1px solid rgba(132,204,22,0.3)'
+    });
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2000);
+}
+
 async function loadDesign() {
-    // Check if user is logged in
-    if (!window.currentUser) {
-        const signIn = confirm('You need to sign in to load your saved designs. Would you like to go to the sign in page?');
-        if (signIn) {
-            document.body.classList.add('page-transition');
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 300);
-        }
-        return;
-    }
-    
     try {
         // Load the most recent design
         const loadResponse = await fetch(`/load`);
+        if (loadResponse.status === 401) { showLoginPrompt('load your saved designs'); return; }
         const loadResult = await loadResponse.json();
         
         if (!loadResult.success) {
@@ -2218,6 +2542,14 @@ async function loadDesign() {
 
         // Restore room state
         if (loadResult.room) applyRoomState(loadResult.room);
+        // Restore wall editor state
+        if (loadResult.walls) {
+            wallEditor.deserialize(loadResult.walls);
+        } else {
+            // Legacy design — generate rectangular walls
+            const r = loadResult.room || {};
+            import('./wallEditor.js').then(m => m.generateLegacyWalls(r.width||20, r.length||20, r.height||8, r.wallColor||'#f2ede8'));
+        }
         
         alert(`Latest design "${loadResult.design_name}" loaded successfully!`);
     } catch (error) {
@@ -2226,17 +2558,9 @@ async function loadDesign() {
 }
 
 async function manageDesigns() {
-    if (!window.currentUser) {
-        const signIn = confirm('You need to sign in to manage your saved designs. Would you like to go to the sign in page?');
-        if (signIn) {
-            document.body.classList.add('page-transition');
-            setTimeout(() => { window.location.href = '/'; }, 300);
-        }
-        return;
-    }
-
     try {
         const response = await fetch("/designs");
+        if (response.status === 401) { showLoginPrompt('view your saved designs'); return; }
         const result = await response.json();
 
         const modal = document.getElementById('designsModal');
@@ -2293,6 +2617,16 @@ async function loadDesignById(id, name, btn) {
             if (item.scale) obj.scale.setScalar(item.scale);
         });
         if (data.room) applyRoomState(data.room);
+        if (data.walls) {
+            wallEditor.deserialize(data.walls);
+        } else {
+            const r = data.room || {};
+            import('./wallEditor.js').then(m => m.generateLegacyWalls(r.width||20, r.length||20, r.height||8, r.wallColor||'#f2ede8'));
+        }
+
+        // Track for silent re-save
+        currentDesignId   = id;
+        currentDesignName = name;
 
         closeDesignsModal();
         // small toast
@@ -2513,6 +2847,8 @@ function loadSession() {
 // Clear current session
 function clearSession() {
     localStorage.removeItem('currentSession');
+    currentDesignId   = null;
+    currentDesignName = null;
     console.log('Session cleared');
 }
 
@@ -2673,3 +3009,182 @@ function updateWalkMode() {
     }
 }
 
+
+// ── Wall Dimension Controls ───────────────────────────────────────────────────
+const WALL_TYPES = ['interiorwall','doorwall','windowwall','glasswall'];
+
+function updateWallDimsPanel() {
+    const panel = document.getElementById('wallDimsPanel');
+    if (!panel) return;
+    if (selectedObjects.size !== 1) { panel.style.display = 'none'; return; }
+    const obj = [...selectedObjects][0];
+    if (!WALL_TYPES.includes(obj.userData.type)) { panel.style.display = 'none'; return; }
+    panel.style.display = 'block';
+
+    // Sync dimensions
+    document.getElementById('wallDimX').textContent = obj.scale.x.toFixed(2) + 'x';
+    document.getElementById('wallDimY').textContent = obj.scale.y.toFixed(2) + 'x';
+    document.getElementById('wallDimZ').textContent = obj.scale.z.toFixed(2) + 'x';
+
+    // Sync style & color from stored userData
+    const styleEl = document.getElementById('selWallStyle');
+    const colorEl = document.getElementById('selWallColor');
+    if (styleEl) styleEl.value = obj.userData.wallStyle || 'plain';
+    if (colorEl) colorEl.value = obj.userData.wallColor || (document.getElementById('wallColor')?.value || '#f2ede8');
+
+    // Lay flat — interior wall only
+    const layFlatRow = document.getElementById('layFlatRow');
+    const layFlatBtn = document.getElementById('layFlatBtn');
+    if (layFlatRow) {
+        layFlatRow.style.display = obj.userData.type === 'interiorwall' ? 'block' : 'none';
+        if (layFlatBtn) {
+            const isFlat = Math.abs(obj.rotation.x) > 0.1;
+            layFlatBtn.textContent = isFlat ? '🔄 Stand Upright (Wall)' : '🔄 Lay Flat (Floor / Ceiling)';
+        }
+    }
+}
+
+window.applySelectedWallStyle = function(style) {
+    if (selectedObjects.size !== 1) return;
+    const obj = [...selectedObjects][0];
+    if (!WALL_TYPES.includes(obj.userData.type)) return;
+    const color = obj.userData.wallColor || document.getElementById('wallColor')?.value || '#f2ede8';
+    obj.userData.wallStyle = style;
+    const newMat = getWallMat(color, style);
+    obj.traverse(child => {
+        if (child.isMesh && child.userData.isWallSurface) {
+            child.material = newMat;
+        }
+    });
+    // Rebuild the wall with new style
+    rebuildSelectedWall(obj);
+    setTimeout(() => window.saveSession(), 200);
+};
+
+window.applySelectedWallColor = function(color) {
+    if (selectedObjects.size !== 1) return;
+    const obj = [...selectedObjects][0];
+    if (!WALL_TYPES.includes(obj.userData.type)) return;
+    obj.userData.wallColor = color;
+    const style = obj.userData.wallStyle || 'plain';
+    rebuildSelectedWall(obj);
+    setTimeout(() => window.saveSession(), 200);
+};
+
+function rebuildSelectedWall(obj) {
+    const type = obj.userData.type;
+    const color = obj.userData.wallColor || document.getElementById('wallColor')?.value || '#f2ede8';
+    const style = obj.userData.wallStyle || 'plain';
+    const newMat = getWallMat(color, style);
+    // Apply new material to all wall surface meshes (not door/window frames)
+    obj.traverse(child => {
+        if (child.isMesh && child.userData.isWallSurface) {
+            child.material = newMat;
+        }
+    });
+}
+
+window.toggleWallFlat = window.toggleWallFlat || function(){};
+window.adjustWallDim = function(axis, delta) {
+    if (selectedObjects.size !== 1) return;
+    const obj = [...selectedObjects][0];
+    if (!WALL_TYPES.includes(obj.userData.type)) return;
+    const min = axis === 'z' ? 0.1 : 0.2;
+    const max = axis === 'y' ? 5 : 10;
+    obj.scale[axis] = Math.min(max, Math.max(min, +(obj.scale[axis] + delta).toFixed(2)));
+    updateWallDimsPanel();
+    setTimeout(() => window.saveSession(), 200);
+};
+
+window.resetWallDims = function() {
+    if (selectedObjects.size !== 1) return;
+    const obj = [...selectedObjects][0];
+    if (!WALL_TYPES.includes(obj.userData.type)) return;
+    obj.scale.set(1, 1, 1);
+    obj.rotation.x = 0;
+    updateWallDimsPanel();
+    setTimeout(() => window.saveSession(), 200);
+};
+
+window.toggleWallFlat = function() {
+    if (selectedObjects.size !== 1) return;
+    const obj = [...selectedObjects][0];
+    if (obj.userData.type !== 'interiorwall') return;
+    const isFlat = Math.abs(obj.rotation.x) > 0.1;
+    if (isFlat) {
+        // Stand back upright
+        obj.rotation.x = 0;
+        // Move back to floor level
+        obj.position.y = 0;
+    } else {
+        // Lay flat — rotate 90° on X so it becomes a horizontal slab
+        obj.rotation.x = -Math.PI / 2;
+        // Lift to current Y position or a sensible floor height
+        if (obj.position.y < 0.5) obj.position.y = 3.0; // default 2nd floor height
+    }
+    updateWallDimsPanel();
+    setTimeout(() => window.saveSession(), 200);
+};
+
+// ── Inline login prompt (shown when server returns 401) ───────────────────────
+window.showLoginPrompt = function showLoginPrompt(action) {
+    // Remove any existing prompt
+    const existing = document.getElementById('inlineLoginModal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'inlineLoginModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:99999;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:32px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;">
+            <button onclick="document.getElementById('inlineLoginModal').remove()"
+                style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#888;">×</button>
+            <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:6px;">Sign in required</div>
+            <div style="font-size:13px;color:#64748b;margin-bottom:20px;">You need to sign in to ${action}.</div>
+            <input id="ilUsername" type="text" placeholder="Username" autocomplete="username"
+                style="width:100%;height:42px;border-radius:8px;border:1px solid #e2e8f0;padding:0 14px;font-size:14px;margin-bottom:10px;box-sizing:border-box;">
+            <input id="ilPassword" type="password" placeholder="Password" autocomplete="current-password"
+                style="width:100%;height:42px;border-radius:8px;border:1px solid #e2e8f0;padding:0 14px;font-size:14px;margin-bottom:6px;box-sizing:border-box;">
+            <div id="ilError" style="color:#dc2626;font-size:12px;min-height:18px;margin-bottom:10px;"></div>
+            <button onclick="submitInlineLogin()"
+                style="width:100%;height:42px;background:linear-gradient(135deg,#84cc16,#65a30d);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">
+                Sign In
+            </button>
+            <div style="text-align:center;margin-top:12px;font-size:12px;color:#94a3b8;">
+                No account? <a href="/" style="color:#84cc16;font-weight:600;">Register on home page</a>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => document.getElementById('ilUsername')?.focus(), 100);
+}
+
+window.submitInlineLogin = async function() {
+    const username = document.getElementById('ilUsername')?.value?.trim();
+    const password = document.getElementById('ilPassword')?.value;
+    const errEl    = document.getElementById('ilError');
+    if (!username || !password) { errEl.textContent = 'Please enter username and password.'; return; }
+    try {
+        const res  = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.currentUser = data.username;
+            // Update user status bar
+            const statusEl = document.getElementById('userStatus');
+            const nameEl   = document.getElementById('usernameDisplay');
+            if (statusEl) statusEl.style.display = 'block';
+            if (nameEl)   nameEl.textContent = data.username;
+            document.getElementById('inlineLoginModal').remove();
+            // Re-enable save/load buttons
+            if (typeof updateSaveLoadButtons === 'function') updateSaveLoadButtons(true);
+        } else {
+            errEl.textContent = data.message || 'Invalid credentials.';
+        }
+    } catch(e) {
+        document.getElementById('ilError').textContent = 'Login failed. Try again.';
+    }
+};

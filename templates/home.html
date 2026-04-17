@@ -425,7 +425,11 @@
         <a href="#features" class="nav-link">Features</a>
         <a href="#rooms" class="nav-link">Rooms</a>
         <a href="#how" class="nav-link">How it works</a>
-        <button onclick="showLogin()" class="nav-btn">Sign In</button>
+        <button onclick="showLogin()" class="nav-btn" id="navSignInBtn">Sign In</button>
+        <span id="navUserInfo" style="display:none;align-items:center;gap:12px;">
+            <span id="navUsername" style="font-size:11px;color:var(--gold);letter-spacing:1px;font-weight:600;text-transform:uppercase;"></span>
+            <button onclick="handleLogout()" class="nav-btn" style="border-color:rgba(255,100,100,0.4);color:rgba(255,120,120,0.9);">Sign Out</button>
+        </span>
     </div>
 </nav>
 
@@ -445,7 +449,7 @@
                 Start Designing
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7H13M8 2L13 7L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
-            <a onclick="showLogin()" class="btn-ghost">View saved designs</a>
+            <a onclick="viewSavedDesigns()" class="btn-ghost">View saved designs</a>
         </div>
     </div>
     <div class="hero-stats">
@@ -613,7 +617,7 @@
                 Open the Studio
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7H13M8 2L13 7L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
-            <a onclick="showRegister()" class="btn-ghost" style="color:rgba(255,255,255,0.4);border-color:rgba(255,255,255,0.2);cursor:pointer">Create free account</a>
+            <a onclick="showRegister()" id="ctaRegisterBtn" class="btn-ghost" style="color:rgba(255,255,255,0.4);border-color:rgba(255,255,255,0.2);cursor:pointer">Create free account</a>
         </div>
     </div>
 </section>
@@ -629,16 +633,65 @@
                 <rect x="9" y="9" width="6" height="6" stroke="rgba(201,169,110,0.7)" stroke-width="1.2"/>
             </svg>
         </div>
-        <span class="footer-copy">© 2025 Interior Designer Studio</span>
+        <span class="footer-copy">© 2026 Interior Designer Studio</span>
     </div>
     <div class="footer-links">
         <a href="/editor" class="footer-link">Studio</a>
-        <a onclick="showLogin()" class="footer-link" style="cursor:pointer">Sign In</a>
-        <a onclick="showRegister()" class="footer-link" style="cursor:pointer">Register</a>
+        <a id="footerSignInBtn" onclick="showLogin()" class="footer-link" style="cursor:pointer">Sign In</a>
+        <a id="footerRegisterBtn" onclick="showRegister()" class="footer-link" style="cursor:pointer">Register</a>
+        <span id="footerUserInfo" style="display:none; align-items:center; gap:12px;">
+            <span id="footerUsername" style="font-size:11px; color:var(--gold); font-weight:600; letter-spacing:1px; text-transform:uppercase;"></span>
+            <a onclick="handleLogout()" class="footer-link" style="cursor:pointer; color:rgba(255,100,100,0.7);">Sign Out</a>
+        </span>
     </div>
 </footer>
 
 <script>
+    // Check session on page load — update nav if already logged in
+    (async () => {
+        try {
+            const res  = await fetch('/check_session');
+            const data = await res.json();
+            if (data.logged_in) {
+                setLoggedInNav(data.username);
+            }
+        } catch(e) {}
+    })();
+
+    function setLoggedInNav(username) {
+        document.getElementById('navSignInBtn').style.display  = 'none';
+        document.getElementById('navUserInfo').style.display   = 'flex';
+        document.getElementById('navUsername').textContent     = username;
+        document.getElementById('footerSignInBtn').style.display   = 'none';
+        document.getElementById('footerRegisterBtn').style.display = 'none';
+        document.getElementById('footerUserInfo').style.display    = 'flex';
+        document.getElementById('footerUsername').textContent      = '✓ ' + username;
+        const ctaReg = document.getElementById('ctaRegisterBtn');
+        if (ctaReg) ctaReg.style.display = 'none';
+        window._loggedInUser = username;
+    }
+
+    function viewSavedDesigns() {
+        if (window._loggedInUser) {
+            window.location.href = '/editor';
+        } else {
+            showLogin();
+        }
+    }
+
+    async function handleLogout() {
+        await fetch('/logout', { method: 'POST' });
+        window._loggedInUser = null;
+        document.getElementById('navSignInBtn').style.display      = '';
+        document.getElementById('navUserInfo').style.display       = 'none';
+        document.getElementById('footerSignInBtn').style.display   = '';
+        document.getElementById('footerRegisterBtn').style.display = '';
+        document.getElementById('footerUserInfo').style.display    = 'none';
+        const ctaReg = document.getElementById('ctaRegisterBtn');
+        if (ctaReg) ctaReg.style.display = '';
+        showToast('success', 'Signed out', 'You have been signed out.');
+    }
+
     // Nav scroll effect
     window.addEventListener('scroll', () => {
         document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
@@ -727,6 +780,7 @@
             if(data.success){
                 showToast('success','Signed in','Welcome back. Taking you to the studio...');
                 hideLogin();
+                setLoggedInNav(data.username);
                 setTimeout(()=>{document.body.style.opacity='0';document.body.style.transition='opacity 0.4s';setTimeout(()=>{window.location.href='/editor';},400);}, 800);
             } else {
                 showError('loginError',data.message||'Invalid credentials');

@@ -23,6 +23,7 @@ class Design(db.Model):
     wall_style = db.Column(db.String(20), default='plain')
     floor_color = db.Column(db.String(10), default='#dcd5c8')
     roof_color = db.Column(db.String(10), default='#f8f6f2')
+    walls = db.Column(db.Text, nullable=True)  # JSON wall segments, null = legacy design
     furniture_items = db.relationship('Furniture', backref='design', lazy=True, cascade='all, delete-orphan')
 
 class Furniture(db.Model):

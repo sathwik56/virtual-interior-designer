@@ -223,6 +223,24 @@ def save():
                 )
                 db.session.add(furniture)
 
+        # If design_id provided, update that specific design directly
+        design_id = data.get('design_id')
+        if design_id:
+            existing_design = Design.query.filter_by(id=design_id, user_id=user_id).first()
+            if existing_design:
+                apply_furniture(existing_design.id)
+                existing_design.room_width  = room_state.get('width', 20)
+                existing_design.room_length = room_state.get('length', 20)
+                existing_design.room_height = room_state.get('height', 8)
+                existing_design.wall_color  = room_state.get('wallColor', '#f2ede8')
+                existing_design.wall_style  = room_state.get('wallStyle', 'plain')
+                existing_design.floor_color = room_state.get('floorColor', '#dcd5c8')
+                existing_design.roof_color  = room_state.get('roofColor', '#f8f6f2')
+                existing_design.walls       = data.get('walls', None)
+                existing_design.updated_at  = datetime.utcnow()
+                db.session.commit()
+                return jsonify({"success": True, "message": f'"{existing_design.name}" saved.', "design_id": existing_design.id, "design_name": existing_design.name})
+
         # Check if design with this name already exists for this user
         existing_design = Design.query.filter_by(user_id=user_id, name=design_name).first()
         
@@ -235,6 +253,7 @@ def save():
             existing_design.wall_style  = room_state.get('wallStyle', 'plain')
             existing_design.floor_color = room_state.get('floorColor', '#dcd5c8')
             existing_design.roof_color  = room_state.get('roofColor', '#f8f6f2')
+            existing_design.walls       = data.get('walls', None)
             existing_design.updated_at  = datetime.utcnow()
             db.session.commit()
             return jsonify({"success": True, "message": "Design updated successfully!", "design_id": existing_design.id, "design_name": existing_design.name})
@@ -249,6 +268,7 @@ def save():
                 wall_style=room_state.get('wallStyle', 'plain'),
                 floor_color=room_state.get('floorColor', '#dcd5c8'),
                 roof_color=room_state.get('roofColor', '#f8f6f2'),
+                walls=data.get('walls', None),
             )
             db.session.add(new_design)
             db.session.flush()
@@ -290,6 +310,7 @@ def load():
                 "success": True,
                 "design_name": design.name,
                 "furniture": furniture_data,
+                "walls": design.walls,
                 "room": {
                     "width": design.room_width, "length": design.room_length,
                     "height": design.room_height, "wallColor": design.wall_color,
@@ -318,6 +339,7 @@ def load():
                 "success": True,
                 "design_name": latest_design.name,
                 "furniture": furniture_data,
+                "walls": latest_design.walls,
                 "room": {
                     "width": latest_design.room_width, "length": latest_design.room_length,
                     "height": latest_design.room_height, "wallColor": latest_design.wall_color,

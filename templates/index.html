@@ -476,14 +476,6 @@
         </div>
     </a>
 
-    <!-- User Status (if logged in) -->
-    <div id="userStatus" style="display: none; margin-bottom: 14px; padding: 10px 12px; background: rgba(201,169,110,0.06); border: 1px solid rgba(201,169,110,0.2);">
-        <div style="font-size: 10px; font-weight: 700; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase;">✓ <span id="usernameDisplay"></span></div>
-        <button onclick="handleLogout()" class="modern-btn btn-danger w-full" style="margin-top: 8px; height: 28px; font-size: 10px;">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-    </div>
-    
     <!-- Room Type Badge -->
     <div id="roomTypeBadge" style="display:none; margin-bottom:12px; padding:8px 12px; background:rgba(201,169,110,0.06); border:1px solid rgba(201,169,110,0.2); display:flex; align-items:center; justify-content:space-between;">
         <div style="font-size:10px; font-weight:600; color:var(--accent); letter-spacing:1px; text-transform:uppercase;">
@@ -538,6 +530,68 @@
             <select id="furnitureSelect" style="display:none;"></select>
             <!-- Categorized furniture list — scrollable -->
             <div id="furnCategoryList" style="margin-top:6px; max-height:260px; overflow-y:auto; padding-right:2px;"></div>
+
+            <!-- Wall Dimensions Panel — shown only when a wall item is selected -->
+            <div id="wallDimsPanel" style="display:none; margin-top:10px; padding:10px; background:rgba(132,204,22,0.06); border-radius:8px; border:1px solid rgba(132,204,22,0.2);">
+                <div class="room-size-label" style="margin-bottom:8px;">Selected Wall Properties</div>
+
+                <!-- Style + Color row -->
+                <div class="room-size-label" style="margin-bottom:4px;">Wall Style</div>
+                <select id="selWallStyle" style="margin-bottom:8px;" onchange="applySelectedWallStyle(this.value)">
+                    <option value="plain">🟫 Plain / Painted</option>
+                    <option value="brick">🧱 Brick</option>
+                    <option value="woodpanel">🪵 Wood Panel</option>
+                    <option value="tile">⬜ Tile</option>
+                    <option value="concrete">🔲 Concrete</option>
+                </select>
+                <div class="room-size-label" style="margin-bottom:4px;">Wall Color</div>
+                <input type="color" id="selWallColor" value="#f2ede8" style="margin-bottom:10px;"
+                    onchange="applySelectedWallColor(this.value)">
+
+                <hr style="border:none;border-top:1px solid rgba(132,204,22,0.2);margin:6px 0 10px;">
+
+                <!-- Dimensions -->
+                <div class="room-size-label" style="margin-bottom:6px;">Dimensions</div>
+                <div class="room-size-row">
+                    <div class="room-size-item">
+                        <div class="room-size-label">Length (X)</div>
+                        <div style="display:flex;gap:3px;align-items:center;">
+                            <button onclick="adjustWallDim('x',-0.5)" class="modern-btn" style="width:26px;height:26px;flex-shrink:0;font-size:14px;padding:0;">−</button>
+                            <span id="wallDimX" style="flex:1;text-align:center;font-size:11px;color:#1e293b;font-weight:600;">1.0</span>
+                            <button onclick="adjustWallDim('x',0.5)" class="modern-btn" style="width:26px;height:26px;flex-shrink:0;font-size:14px;padding:0;">+</button>
+                        </div>
+                    </div>
+                    <div class="room-size-item">
+                        <div class="room-size-label">Height (Y)</div>
+                        <div style="display:flex;gap:3px;align-items:center;">
+                            <button onclick="adjustWallDim('y',-0.25)" class="modern-btn" style="width:26px;height:26px;flex-shrink:0;font-size:14px;padding:0;">−</button>
+                            <span id="wallDimY" style="flex:1;text-align:center;font-size:11px;color:#1e293b;font-weight:600;">1.0</span>
+                            <button onclick="adjustWallDim('y',0.25)" class="modern-btn" style="width:26px;height:26px;flex-shrink:0;font-size:14px;padding:0;">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="room-size-row" style="margin-top:4px;">
+                    <div class="room-size-item">
+                        <div class="room-size-label">Depth (Z)</div>
+                        <div style="display:flex;gap:3px;align-items:center;">
+                            <button onclick="adjustWallDim('z',-0.1)" class="modern-btn" style="width:26px;height:26px;flex-shrink:0;font-size:14px;padding:0;">−</button>
+                            <span id="wallDimZ" style="flex:1;text-align:center;font-size:11px;color:#1e293b;font-weight:600;">1.0</span>
+                            <button onclick="adjustWallDim('z',0.1)" class="modern-btn" style="width:26px;height:26px;flex-shrink:0;font-size:14px;padding:0;">+</button>
+                        </div>
+                    </div>
+                    <div class="room-size-item">
+                        <div class="room-size-label">Reset</div>
+                        <button onclick="resetWallDims()" class="modern-btn" style="width:100%;height:26px;font-size:10px;">↺ Reset</button>
+                    </div>
+                </div>
+
+                <!-- Lay flat — interior wall only -->
+                <div id="layFlatRow" style="display:none; margin-top:8px;">
+                    <button onclick="toggleWallFlat()" id="layFlatBtn" class="modern-btn w-full" style="font-size:10px;">
+                        🔄 Lay Flat (Floor / Ceiling)
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -574,13 +628,61 @@
                 <input type="color" id="floorColor" value="#dcd5c8" onchange="changeFloorColor(this.value)">
             </div>
             
+            <div style="margin-bottom: 10px;">
+                <div class="room-size-label" style="margin-bottom: 4px;">Roof Type</div>
+                <select id="roofTypeSelect" onchange="changeRoofType(this.value)">
+                    <option value="flat">⬜ Flat / Ceiling</option>
+                    <option value="gable">🏠 Gable Roof</option>
+                    <option value="hip">🔷 Hip Roof</option>
+                </select>
+            </div>
             <div style="margin-bottom: 0;">
-                <div class="room-size-label" style="margin-bottom: 4px;">Roof Color (Glass)</div>
+                <div class="room-size-label" style="margin-bottom: 4px;">Roof Color</div>
                 <input type="color" id="roofColor" value="#f0f0f0" onchange="changeRoofColor(this.value)">
             </div>
         </div>
     </div>
-    
+
+    <hr class="section-divider">
+
+    <!-- Roof Section -->
+    <div style="margin-bottom: 12px;">
+        <div class="section-header" onclick="toggleSection('roofSection')">
+            <h2 class="label-text" style="margin-bottom: 0;">
+                <i class="fas fa-home label-icon"></i>
+                Roof
+            </h2>
+            <span class="collapse-arrow" id="roofSectionArrow">▼</span>
+        </div>
+        <div class="section-content expanded" id="roofSectionContent">
+            <div style="margin-top:8px;margin-bottom:10px;">
+                <div class="room-size-label" style="margin-bottom:6px;">Roof Shape</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">
+                    <button class="modern-btn" id="roofBtn_none" onclick="applyRoofShape('none')" style="height:38px;font-size:10px;flex-direction:column;gap:2px;">
+                        <span style="font-size:14px;">✕</span><span>No Roof</span>
+                    </button>
+                    <button class="modern-btn" id="roofBtn_flat" onclick="applyRoofShape('flat')" style="height:38px;font-size:10px;flex-direction:column;gap:2px;">
+                        <span style="font-size:14px;">⬜</span><span>Flat</span>
+                    </button>
+                    <button class="modern-btn" id="roofBtn_gable" onclick="applyRoofShape('gable')" style="height:38px;font-size:10px;flex-direction:column;gap:2px;">
+                        <span style="font-size:14px;">🏠</span><span>Gable</span>
+                    </button>
+                    <button class="modern-btn" id="roofBtn_hip" onclick="applyRoofShape('hip')" style="height:38px;font-size:10px;flex-direction:column;gap:2px;">
+                        <span style="font-size:14px;">🔷</span><span>Hip</span>
+                    </button>
+                </div>
+                <div class="room-size-label" style="margin-bottom:4px;">Roof Color</div>
+                <input type="color" id="roofColor" value="#f0f0f0" onchange="changeRoofColor(this.value)" style="margin-bottom:8px;">
+                <div class="room-size-label" style="margin-bottom:4px;">Overhang (m)</div>
+                <input type="number" id="roofOverhang" value="0.5" min="0" max="3" step="0.1" style="margin-bottom:8px;" onchange="applyRoofShape(currentRoofShape)">
+                <div id="roofPitchRow" style="margin-bottom:8px;">
+                    <div class="room-size-label" style="margin-bottom:4px;">Pitch Height (m)</div>
+                    <input type="number" id="roofPitch" value="2.5" min="0.5" max="10" step="0.5" onchange="applyRoofShape(currentRoofShape)">
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Top Toolbar -->
@@ -588,9 +690,9 @@
     <button class="toolbar-btn" onclick="undoAction()" title="Undo"><i class="fas fa-undo"></i> Undo</button>
     <button class="toolbar-btn" onclick="redoAction()" title="Redo"><i class="fas fa-redo"></i> Redo</button>
     <div class="toolbar-sep"></div>
-    <button class="toolbar-btn" onclick="toggleWalls()"><i class="fas fa-border-outer"></i> Walls</button>
     <button class="toolbar-btn" onclick="toggleRoof()"><i class="fas fa-home"></i> Roof</button>
     <button class="toolbar-btn" onclick="toggleGrid()"><i class="fas fa-border-all"></i> Grid</button>
+    <button id="floorPlanBtn" class="toolbar-btn" onclick="toggleFloorPlan()">⊞ Floor Plan</button>
     <div class="toolbar-sep"></div>
     <button class="toolbar-btn" onclick="resetCamera()"><i class="fas fa-video"></i> Reset View</button>
     <button class="toolbar-btn" onclick="topView()"><i class="fas fa-eye"></i> Top View</button>
@@ -599,8 +701,8 @@
     <div class="toolbar-sep"></div>
     <button class="toolbar-btn" onclick="captureScreenshot()"><i class="fas fa-camera"></i> Export</button>
     <div class="toolbar-sep"></div>
-    <button class="toolbar-btn btn-primary" style="padding:0 16px;" onclick="saveDesign()"><i class="fas fa-save"></i> Save</button>
-    <button class="toolbar-btn" onclick="manageDesigns()"><i class="fas fa-folder-open"></i> Load</button>
+    <button id="saveBtn" class="toolbar-btn btn-primary" style="padding:0 16px;" onclick="handleSaveClick()"><i class="fas fa-save"></i> Save</button>
+    <button id="loadBtn" class="toolbar-btn" onclick="manageDesigns()"><i class="fas fa-folder-open"></i> Load</button>
 </div>
 
 <!-- Right Properties Panel -->
@@ -637,19 +739,17 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (data.logged_in) {
             currentUser = data.username;
             window.currentUser = data.username;
-            
-            // Show user status
-            document.getElementById('userStatus').style.display = 'block';
-            document.getElementById('usernameDisplay').textContent = data.username;
+            updateSaveLoadButtons(true);
         } else {
-            // User not logged in - this is fine, they can still design
             currentUser = null;
             window.currentUser = null;
+            updateSaveLoadButtons(false);
         }
     } catch (error) {
         console.error('Session check failed:', error);
         currentUser = null;
         window.currentUser = null;
+        updateSaveLoadButtons(false);
     }
     
     // Hide loading screen after a short delay to ensure 3D scene is ready
@@ -1020,6 +1120,44 @@ async function handleLogout() {
         alert('Logged out successfully!');
     } catch (error) {
         alert('Logout error: ' + error.message);
+    }
+}
+
+function updateSaveLoadButtons(loggedIn) {
+    const saveBtn = document.getElementById('saveBtn');
+    const loadBtn = document.getElementById('loadBtn');
+    if (!saveBtn) return;
+    if (loggedIn) {
+        saveBtn.onclick = () => window.saveDesign && window.saveDesign();
+        saveBtn.title = '';
+        saveBtn.style.opacity = '1';
+        saveBtn.style.cursor = 'pointer';
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+        if (loadBtn) { loadBtn.style.opacity = '1'; loadBtn.style.cursor = 'pointer'; loadBtn.onclick = () => window.manageDesigns && window.manageDesigns(); }
+    } else {
+        saveBtn.onclick = () => showSignInNotice();
+        saveBtn.title = 'Sign in to save';
+        saveBtn.style.opacity = '0.5';
+        saveBtn.style.cursor = 'default';
+        saveBtn.innerHTML = '<i class="fas fa-lock"></i> Save';
+        if (loadBtn) { loadBtn.style.opacity = '0.5'; loadBtn.style.cursor = 'default'; loadBtn.onclick = () => showSignInNotice(); }
+    }
+}
+
+function handleSaveClick() {
+    if (window.currentUser) {
+        window.saveDesign && window.saveDesign();
+    } else {
+        showSignInNotice();
+    }
+}
+
+function showSignInNotice() {
+    // Show inline login prompt from main.js
+    if (typeof showLoginPrompt === 'function') {
+        showLoginPrompt('save your design');
+    } else if (window.showLoginPrompt) {
+        window.showLoginPrompt('save your design');
     }
 }
 
